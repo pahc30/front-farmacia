@@ -1,0 +1,16 @@
+.texto-titulo {
+  color: #4f4f4f !important;
+  font-weight: bold;
+}
+
+.texto-subtitulo {
+  color: #424242 !important;
+  font-weight: 600;
+  text-align: center;
+}
+
+.text-center {
+  display: flex;
+  justify-content: center;
+}
+

@@ -1,0 +1,35 @@
+<div class="dialog-content-wrapper min-w-60 md:min-w-100">
+
+    <mat-toolbar matDialogTitle class="m-0 !bg-gray-700 !text-white">
+        <mat-toolbar-row class="flex flex-row justify-between items-center">
+            <span class="title dialog-title text-lg">CONFIRMACIÓN</span>
+            <div class="flex cursor-pointer hover:text-minjus_dark hover:bg-white" (click)="onClickNo()">
+                <mat-icon>close</mat-icon>
+            </div>
+        </mat-toolbar-row>
+    </mat-toolbar>
+
+    <div mat-dialog-content class="m-0" fusePerfectScrollbar>
+        <div *ngIf="loading" class="flex justify-center p-4">
+            <mat-spinner [diameter]="40" *ngIf="loading"></mat-spinner>
+        </div>
+        <div *ngIf="!loading" class="flex justify-center p-4">
+            {{dialogContent}}
+        </div>
+
+    </div>
+    <div *ngIf="!loading" mat-dialog-actions class="m-auto p-4 flex justify-center gap-2">
+        <button id="btnyes" #btnyes mat-raised-button class="!bg-minjus_primary !text-white rounded-md py-1 px-3 flex gap-1"
+            (click)="onClickSi()">
+            <mat-icon >check</mat-icon>
+            SÍ
+        </button>
+
+        <button mat-raised-button
+            class="!bg-minjus_danger !text-white rounded-md py-1 px-3 flex gap-1"
+            (click)="onClickNo()">
+            <mat-icon >close</mat-icon>
+            NO
+        </button>
+    </div>
+</div>

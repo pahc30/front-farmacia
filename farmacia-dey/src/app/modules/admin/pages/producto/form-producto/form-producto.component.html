@@ -1,0 +1,101 @@
+<div>
+  <div>
+    <h5 class="font-semibold">{{ producto? 'Editar': 'Nuevo' }} Producto</h5>
+    <hr />
+  </div>
+
+  <!-- Formulario -->
+  <div class="mt-3">
+    <div [formGroup]="form">
+      <div class="flex flex-wrap">
+
+        <div class="w-full sm:w-1/2 pr-1 pb-1">
+          <mat-form-field class="w-full">
+            <mat-label>Código</mat-label>
+            <input matInput formControlName="codigo" type="text">
+            <mat-error *ngIf="frmValidationUtils?.hasErrors('codigo')"
+              [innerHtml]="frmValidationUtils.getErrorMessages('codigo', 'Código')"></mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="w-full sm:w-1/2 pr-1 pb-1">
+          <mat-form-field class="w-full">
+            <mat-label>Nombre</mat-label>
+            <input matInput formControlName="nombre" type="text">
+            <mat-error *ngIf="frmValidationUtils?.hasErrors('nombre')"
+              [innerHtml]="frmValidationUtils.getErrorMessages('nombre', 'Nombre')"></mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="w-full pr-1 pb-1">
+          <mat-form-field class="w-full">
+            <mat-label>Descripción</mat-label>
+            <textarea matInput formControlName="descripcion" rows="3"></textarea>
+            <mat-error *ngIf="frmValidationUtils?.hasErrors('descripcion')"
+              [innerHtml]="frmValidationUtils.getErrorMessages('descripcion', 'Descripción')"></mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="w-full sm:w-1/2 pr-1 pb-1">
+          <mat-form-field class="w-full">
+            <mat-label>Precio</mat-label>
+            <input matInput formControlName="precio" type="number">
+            <mat-error *ngIf="frmValidationUtils?.hasErrors('precio')"
+              [innerHtml]="frmValidationUtils.getErrorMessages('precio', 'Precio')"></mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="w-full sm:w-1/2 pr-1 pb-1">
+          <mat-form-field class="w-full">
+            <mat-label>Stock</mat-label>
+            <input matInput formControlName="stock" type="number">
+            <mat-error *ngIf="frmValidationUtils?.hasErrors('stock')"
+              [innerHtml]="frmValidationUtils.getErrorMessages('stock', 'Stock')"></mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="w-full pr-1 pb-1">
+          <mat-form-field class="w-full">
+            <mat-label>Categoría</mat-label>
+            <mat-select formControlName="categoria">
+              <mat-option *ngFor="let item of categorias" [value]="item.id">{{ item.nombre }}</mat-option>
+            </mat-select>
+            <mat-error *ngIf="frmValidationUtils?.hasErrors('categoria')"
+              [innerHtml]="frmValidationUtils.getErrorMessages('categoria', 'Categoría')"></mat-error>
+          </mat-form-field>
+        </div>
+
+
+
+        <div class="w-full pr-1 pb-1">
+          <div class="flex items-center gap-5">
+            <div *ngIf="imagen || producto?.url" class="border">
+              <img class="max-h-50 max-w-50" src="{{imagen? imagenPreview: producto?.url }}" alt="">
+            </div>
+
+            <div>
+              <button mat-flat-button class="!bg-c_secondary !text-lg !rounded-none"
+                (click)="fileInput.click()">Seleccionar Imagen</button>
+              <span *ngIf="imagen">
+                {{ imagen?.name }}
+              </span>
+              <input #fileInput type="file" accept="image/*" hidden (change)="onFileChange($event)" />
+            </div>
+          </div>
+        </div>
+
+        <div class="w-full mt-6">
+          <div class="flex gap-1">
+            <button mat-flat-button class="!bg-minjus_primary !text-white !text-lg" (click)="onClickGuardar()">{{
+              producto == null? 'Registrar': 'Actualizar' }}</button>
+
+            <button mat-flat-button class="!bg-minjus_danger !text-white !text-lg"
+              (click)="onClickVolver()">Volver</button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>

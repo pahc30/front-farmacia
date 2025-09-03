@@ -1,0 +1,104 @@
+<div class="h-screen overflow-hidden flex items-center justify-center" style="background: #edf2f7;">
+  <div class="flex bg-gray-100 w-full h-screen">
+    <div class="w-3/12 bg-gray-300 rounded p-3 shadow-lg !min-w-90 md:!max-w-90 md:!min-w-90" *ngIf="isOpen">
+      <div class="flex flex-col min-h-screen">
+
+        <div>
+          <div class="flex items-center space-x-4 p-2 mb-5 mt-5">
+            <div>
+              <img src="assets/images/usuario.png" alt="" class="rounded-full h-30 w-30">
+            </div>
+            <div class="flex-grow text-center">
+              <div class="font-semibold text-xl text-gray-700 capitalize font-poppins tracking-wide">
+                {{ infoUsuario?.nombres}} {{ infoUsuario?.apellidoPaterno }} {{ infoUsuario?.apellidoMaterno }}
+              </div>
+              <div class="text-sm">{{infoUsuario?.rol }}</div>
+              <div class="pt-5">
+                <button mat-stroked-button class="!font-bold !text-minjus_red !text-md" (click)="onLogout()">Cerrar
+                sesión</button>
+              </div>
+
+            </div>
+          </div>
+          <div class="pt-4 pb-4">
+            <hr>
+          </div>
+
+          <ul class="space-y-2 text-md">
+
+            <li>
+              <div (click)="onNavigateTo('/client/home')" role="button"
+                class="flex items-center space-x-3 text-gray-700 p-2 rounded-md font-medium hover:bg-gray-200 {{ location.endsWith('/client/home')? 'bg-gray-200': 'focus:bg-gray-200'}} focus:shadow-outline">
+                <span class="flex text-gray-600">
+                  <mat-icon>medical_services</mat-icon>
+                </span>
+                <span>Todos los Productos</span>
+              </div>
+            </li>
+
+            <li>
+              <div (click)="onNavigateTo('/client/compras')" role="button"
+                class="flex items-center space-x-3 text-gray-700 p-2 rounded-md font-medium hover:bg-gray-200 {{ location.endsWith('/client/compras')? 'bg-gray-200': 'focus:bg-gray-200'}} focus:shadow-outline">
+                <span class="flex text-gray-600">
+                  <mat-icon>shopping_bag</mat-icon>
+                </span>
+                <span>Mis Compra</span>
+              </div>
+            </li>
+
+            <li>
+              <div (click)="onNavigateTo('/client/carrito')" role="button"
+                class="flex items-center space-x-3 text-gray-700 p-2 rounded-md font-medium hover:bg-gray-200 {{ location.endsWith('/client/carrito')? 'bg-gray-200': 'focus:bg-gray-200'}} focus:shadow-outline">
+                <span class="flex text-gray-600">
+                  <mat-icon>shopping_cart</mat-icon>
+                </span>
+                <span>Carrito de Compra</span>
+              </div>
+            </li>
+
+          </ul>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="w-full">
+      <div id="contenido" class="flex flex-col h-screen overflow-hidden">
+
+        <!-- Contenido Principal -->
+        <div class="flex flex-col flex-1 overflow-hidden">
+          <div class="flex justify-between items-center bg-minjus_dark text-white p-2">
+            <div class="flex items-center gap-5">
+              <div class="mt-4">
+                <button mat-icon-button (click)="toggleSidebar()"
+                  class="flex mb-4 border rounded p-2 hover:scale-125 !text-white">
+                  <mat-icon>menu</mat-icon>
+                </button>
+              </div>
+            </div>
+            <div class="flex items-center">
+              <img src="assets/images/logo4.jpg" alt="Logo" class="rounded-md !h-15">
+            </div>
+          </div>
+
+          <!-- Contenido con scroll -->
+          <div class="flex-1 overflow-auto">
+            <router-outlet></router-outlet>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div *ngIf="!mobile" class="mt-auto">
+          <div class="bg-minjus_dark text-white p-2">
+            <div class="flex flex-wrap justify-between items-center text-md">
+              <div class="p-0">
+                FARMACA DEY © Todos los derechos reservados
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,44 @@
+<div>
+  <div>
+    <h5 class="font-semibold">{{ categoria? 'Editar': 'Nuevo' }} Categoría</h5>
+    <hr />
+  </div>
+
+  <!-- Formulario -->
+  <div class="mt-3">
+    <div [formGroup]="form">
+      <div class="flex flex-wrap">
+
+        <div class="w-full pr-1 pb-1">
+          <mat-form-field class="w-full">
+            <mat-label>Nombre</mat-label>
+            <input matInput formControlName="nombre" type="text">
+            <mat-error *ngIf="frmValidationUtils?.hasErrors('nombre')"
+              [innerHtml]="frmValidationUtils.getErrorMessages('nombre', 'Nombre')"></mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="w-full pr-1 pb-1">
+          <mat-form-field class="w-full">
+            <mat-label>Descripción</mat-label>
+            <textarea matInput formControlName="descripcion" rows="3"></textarea>
+            <mat-error *ngIf="frmValidationUtils?.hasErrors('nombres')"
+              [innerHtml]="frmValidationUtils.getErrorMessages('nombres', 'Descripción')"></mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="w-full mt-2">
+          <div class="flex gap-1">
+            <button mat-flat-button class="!bg-minjus_primary !text-white !text-lg" (click)="onClickGuardar()">{{
+              categoria == null? 'Registrar': 'Actualizar' }}</button>
+
+            <button mat-flat-button class="!bg-minjus_danger !text-white !text-lg"
+              (click)="onClickVolver()">Volver</button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>

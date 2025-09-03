@@ -1,0 +1,106 @@
+<div class="h-screen !bg-gray-300">
+
+  <div class="responsive-content flex justify-between items-center bg-minjus_dark text-white p-3">
+    <img src="assets/images/logo4.jpg" alt="Logo" class="rounded-full !h-15">
+  </div>
+
+  <div class="container">
+
+    <div class="mb-5">
+      <h3 class="font-semibold">REGISTRARSE</h3>
+      <hr>
+    </div>
+
+    <div [formGroup]="form">
+      <div class="flex flex-wrap">
+
+        <div class="w-full sm:w-1/2 pr-1 pb-1">
+          <mat-form-field class="w-full">
+            <mat-label>Identificación</mat-label>
+            <input matInput formControlName="identificacion" type="text">
+            <mat-error *ngIf="frmValidationUtils?.hasErrors('identificacion')"
+              [innerHtml]="frmValidationUtils.getErrorMessages('identificacion', 'Identificación')"></mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="w-full sm:w-1/2 pr-1 pb-1">
+          <mat-form-field class="w-full">
+            <mat-label>Nombres</mat-label>
+            <input matInput formControlName="nombres" type="text">
+            <mat-error *ngIf="frmValidationUtils?.hasErrors('nombres')"
+              [innerHtml]="frmValidationUtils.getErrorMessages('nombres', 'Nombres')"></mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="w-full sm:w-1/2 pr-1 pb-1">
+          <mat-form-field class="w-full">
+            <mat-label>Apellidos</mat-label>
+            <input matInput formControlName="apellidos" type="text">
+            <mat-error *ngIf="frmValidationUtils?.hasErrors('apellidos')"
+              [innerHtml]="frmValidationUtils.getErrorMessages('apellidos', 'Apellidos')"></mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="w-full sm:w-1/2 pr-1 pb-1">
+          <mat-form-field class="w-full">
+            <mat-label>Dirección</mat-label>
+            <input matInput formControlName="direccion" type="text">
+            <mat-error *ngIf="frmValidationUtils?.hasErrors('direccion')"
+              [innerHtml]="frmValidationUtils.getErrorMessages('direccion', 'Dirección')"></mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="w-full sm:w-1/2 pr-1 pb-1">
+          <mat-form-field class="w-full">
+            <mat-label>Correo</mat-label>
+            <input matInput formControlName="email" type="email">
+            <mat-error *ngIf="frmValidationUtils?.hasErrors('email')"
+              [innerHtml]="frmValidationUtils.getErrorMessages('email', 'Correo')"></mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="w-full sm:w-1/2 pr-1 pb-1">
+          <mat-form-field class="w-full">
+            <mat-label>Teléfono</mat-label>
+            <input matInput formControlName="telefono" type="text">
+            <mat-error *ngIf="frmValidationUtils?.hasErrors('telefono')"
+              [innerHtml]="frmValidationUtils.getErrorMessages('telefono', 'Teléfono')"></mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="w-full sm:w-1/2 pr-1 pb-1">
+          <mat-form-field class="w-full">
+            <mat-label>Nombre de Usuario</mat-label>
+            <input matInput formControlName="username" type="text" maxlength="30">
+            <mat-error *ngIf="frmValidationUtils?.hasErrors('username')"
+              [innerHtml]="frmValidationUtils.getErrorMessages('username', 'Nombre de de Usuario')"></mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="w-full sm:w-1/2 pr-1 pb-1">
+          <mat-form-field class="w-full">
+            <mat-label>Contraseña</mat-label>
+            <input matInput formControlName="password" type="password">
+            <mat-error *ngIf="frmValidationUtils?.hasErrors('password')"
+              [innerHtml]="frmValidationUtils.getErrorMessages('password', 'Contraseña')"></mat-error>
+          </mat-form-field>
+        </div>
+
+        <div class="w-full">
+          <div class="flex gap-1">
+            <button mat-flat-button class="!bg-minjus_danger !text-white !text-lg"
+            (click)="onBack()">Tengo una cuenta</button>
+
+            <button mat-flat-button class="!bg-minjus_primary !text-white !text-lg"
+              (click)="onRegister()">Registrar</button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+
+</div>
+

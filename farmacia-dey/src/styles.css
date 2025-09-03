@@ -1,0 +1,202 @@
+/* You can add global styles to this file, and also import other style files */
+
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Arial, Helvetica, sans-serif !important;  }
+
+.font-semibold{
+    font-weight: 550 !important;
+}
+
+strong{
+    font-weight: 550 !important;
+}
+
+.grecaptcha-badge{
+    display: none !important;
+    z-index: 1000;
+    margin-bottom: 80px;
+}
+
+.container {
+    width: 100%;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 15px;
+    box-sizing: border-box;
+}
+
+/* Estilos para dispositivos extra pequeños (por defecto, móviles) */
+.container {
+    max-width: 100%;
+}
+
+.container-fluid {
+    max-width: 100%;
+}
+
+/* Estilos para tablets (pantallas mayores a 768px) */
+@media (min-width: 768px) {
+    .container {
+        max-width: 750px;
+    }
+}
+
+/* Estilos para pantallas de tamaño mediano (mayores a 992px) */
+@media (min-width: 992px) {
+    .container {
+        max-width: 960px;
+    }
+}
+
+/* Estilos para pantallas grandes (mayores a 1200px) */
+@media (min-width: 1200px) {
+    .container {
+        max-width: 1140px;
+    }
+}
+
+.border-b-1{
+    border-bottom: 1px rgb(196, 196, 196) solid;
+}
+
+.border-r-1{
+    border-right: 1px rgb(196, 196, 196) solid;
+}
+
+.border-l-1{
+    border-left: 1px rgb(196, 196, 196) solid;
+}
+
+.border-t-1{
+    border-top: 1px rgb(196, 196, 196) solid;
+}
+
+.fw-500{
+    font-weight: 550;
+}
+
+.mdc-button__label{
+    font-weight: 300 !important;
+}
+
+mat-label {
+  font-size: 14px !important;
+  /* color: #000000; */
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+input[matInput] {
+  padding: 0 !important;
+}
+
+mat-form-field, input[matInput], mat-autocomplete, mat-option {
+  font-size: 14px !important;
+}
+
+/*
+html {
+    --mat-form-field-container-height:50px !important;
+    --mat-form-field-filled-label-display: block !important;
+    --mat-form-field-container-vertical-padding: 2px !important;
+    --mat-form-field-filled-with-label-container-padding-top: 14px !important;
+    --mat-form-field-filled-with-label-container-padding-bottom: 0px !important;
+}
+
+*/
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+.font-semibold{
+  font-weight: 550 !important;
+}
+
+strong{
+  font-weight: 550 !important;
+}
+
+.grecaptcha-badge{
+  display: none !important;
+  z-index: 1000;
+  margin-bottom: 80px;
+}
+
+.container {
+  width: 100%; /* El ancho es el 100% hasta que se alcanza un máximo establecido */
+  max-width: 960px; /* Ancho máximo similar al de los contenedores medianos de Bootstrap */
+  margin: 0 auto; /* Centra el contenedor horizontalmente */
+  padding: 15px; /* Un poco de padding para no pegar el contenido a los bordes */
+  box-sizing: border-box; /* Incluye el padding y border en el cálculo del ancho del contenedor */
+}
+
+/* Estilos para dispositivos extra pequeños (por defecto, móviles) */
+.container {
+  max-width: 100%;
+}
+
+/* Estilos para tablets (pantallas mayores a 768px) */
+@media (min-width: 768px) {
+  .container {
+      max-width: 750px;
+  }
+}
+
+/* Estilos para pantallas de tamaño mediano (mayores a 992px) */
+@media (min-width: 992px) {
+  .container {
+      max-width: 960px;
+  }
+}
+
+/* Estilos para pantallas grandes (mayores a 1200px) */
+@media (min-width: 1200px) {
+  .container {
+      max-width: 1140px;
+  }
+}
+
+
+.border-b-1{
+  border-bottom: 1px rgb(196, 196, 196) solid;
+}
+
+.border-r-1{
+  border-right: 1px rgb(196, 196, 196) solid;
+}
+
+.border-l-1{
+  border-left: 1px rgb(196, 196, 196) solid;
+}
+
+.border-t-1{
+  border-top: 1px rgb(196, 196, 196) solid;
+}
+
+.fw-500{
+  font-weight: 550;
+}
+
+.mdc-button__label{
+  font-weight: 300 !important;
+}
+
+mat-label {
+font-size: 14px !important;
+/* color: #000000; */
+margin: 0 !important;
+padding: 0 !important;
+}
+
+input[matInput] {
+padding: 0 !important;
+}
+
+mat-form-field, input[matInput], mat-autocomplete, mat-option {
+font-size: 14px !important;
+}

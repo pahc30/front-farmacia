@@ -1,0 +1,55 @@
+<div class="h-screen !bg-gray-300">
+
+  <div class="responsive-content flex justify-between items-center bg-minjus_dark text-white p-3">
+    <img src="assets/images/logo4.jpg" alt="Logo" class="rounded-full !h-15">
+  </div>
+
+  <div class="container">
+    <div [formGroup]="form">
+      <div class="flex flex-col justify-center items-center h-full">
+
+        <div class="flex flex-row gap-5">
+          <div class="w-1/2">
+            <img src="assets/images/logo1.jpg" alt="Logo" class="rounded-lg">
+          </div>
+          <div class="w-1/2 flex flex-col justify-center items-center">
+            <div class="w-full font-semibold mb-5">
+              <h3>INICIAR SESIÓN</h3>
+              <hr>
+            </div>
+
+            <div class="w-full mb-1 mt-3">
+              <mat-form-field class="w-full">
+                <mat-label>Nombre de usuario</mat-label>
+                <input matInput formControlName="username" type="text" maxlength="45" (keypress)="onKeyEnter($event)">
+                <mat-error *ngIf="frmValidationUtils?.hasErrors('username')"
+                  [innerHtml]="frmValidationUtils.getErrorMessages('username', 'Nombre de usuario')"></mat-error>
+              </mat-form-field>
+            </div>
+
+            <div class="w-full mb-1">
+              <mat-form-field class="w-full">
+                <mat-label>Contraseña</mat-label>
+                <input matInput formControlName="password" type="password" (keypress)="onKeyEnter($event)">
+                <mat-error *ngIf="frmValidationUtils?.hasErrors('password')"
+                  [innerHtml]="frmValidationUtils.getErrorMessages('password', 'Contraseña')"></mat-error>
+              </mat-form-field>
+            </div>
+
+            <div class="w-full pt-3">
+              <div class="flex justify-center items-center gap-5">
+                <button mat-flat-button class="!bg-minjus_red !text-white !text-lg" (click)="onLogin()">Acceder</button>
+ó
+                <a role="button" class="text-lg text-minjus_blue hover:text-blue-700" (click)="onRegister()"> Crear una cuenta</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+
+</div>
