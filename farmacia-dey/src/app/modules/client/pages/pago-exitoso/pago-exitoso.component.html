@@ -1,0 +1,60 @@
+<div class="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-md w-full space-y-8">
+    <div class="text-center">
+      <div class="mx-auto h-24 w-24 text-green-500 mb-4">
+        <mat-icon style="font-size: 96px; height: 96px; width: 96px;">check_circle</mat-icon>
+      </div>
+      <h2 class="text-3xl font-extrabold text-gray-900 mb-2">
+        ¡Pago Exitoso!
+      </h2>
+      <p class="text-gray-600 mb-6">
+        Tu compra ha sido procesada correctamente
+      </p>
+      
+      <div class="bg-white shadow rounded-lg p-6 mb-6">
+        <div class="space-y-3">
+          <div class="flex justify-between">
+            <span class="text-gray-600">Compra #:</span>
+            <span class="font-semibold">{{compraId}}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">Estado:</span>
+            <span class="text-green-600 font-semibold">Pagado</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-gray-600">Fecha:</span>
+            <span class="font-semibold">{{fechaActual | date:'short'}}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-3">
+        <button 
+          mat-raised-button 
+          color="primary" 
+          class="w-full"
+          (click)="descargarBoleta()">
+          <mat-icon>download</mat-icon>
+          Descargar Boleta
+        </button>
+        
+        <button 
+          mat-button 
+          color="accent"
+          class="w-full"
+          (click)="verMisCompras()">
+          <mat-icon>shopping_bag</mat-icon>
+          Ver Mis Compras
+        </button>
+        
+        <button 
+          mat-button 
+          class="w-full"
+          (click)="continuarComprando()">
+          <mat-icon>shopping_cart</mat-icon>
+          Continuar Comprando
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

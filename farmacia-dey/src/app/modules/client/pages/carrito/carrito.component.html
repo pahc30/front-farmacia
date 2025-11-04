@@ -37,7 +37,7 @@
 
         <ng-container matColumnDef="categoria">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Categoría</th>
-          <td mat-cell *matCellDef="let row">{{ row.producto.nombre }}</td>
+          <td mat-cell *matCellDef="let row">{{ row.producto.categoria }}</td>
         </ng-container>
 
         <ng-container matColumnDef="imagen">
@@ -95,7 +95,7 @@
 
         <div class="text-end">
           <button mat-flat-button class="!bg-minjus_success !text-white !text-lg" (click)="onClickPagar()">
-            Finalizar Compra
+            Realizar Compra
           </button>
         </div>
       </div>

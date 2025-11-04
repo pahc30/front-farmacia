@@ -92,12 +92,29 @@ export class FormProductoComponent implements OnInit {
     });
   }
 
-  update = (dato: any, id: any) => {
-
+  updateWithImage = (dato: any, id: any) => {
     dato.id = id;
 
     this.mensaje.showLoading();
     this.productoService.update(dato, id).subscribe({
+      next: (res) => {
+        this.mensaje.showMessageSuccess('Producto actualizado');
+      },
+      error: (err) => {
+        this.mensaje.showMessageErrorObservable(err);
+      },
+      complete: () => {
+        this.mensaje.closeLoading();
+        this.onClickVolver();
+      },
+    });
+  }
+
+  updateWithoutImage = (dato: any, id: any) => {
+    dato.id = id;
+
+    this.mensaje.showLoading();
+    this.productoService.updateWithoutImage(dato, id).subscribe({
       next: (res) => {
         this.mensaje.showMessageSuccess('Producto actualizado');
       },
@@ -121,11 +138,6 @@ export class FormProductoComponent implements OnInit {
       return;
     }
 
-    const formData = new FormData();
-    if (this.imagen) {
-      formData.append('imagen', this.imagen, this.imagen.name);
-    }
-
     const dato = {
       id: this.producto?.id,
       descripcion: this.form.get('descripcion')?.value,
@@ -140,17 +152,30 @@ export class FormProductoComponent implements OnInit {
       url: this.producto?.url,
     };
 
-    formData.append('producto', new Blob([JSON.stringify(dato)], { type: 'application/json' }));
-
     const confirmation = this.mensaje.crearConfirmacion(`¿Seguro que desea ${this.producto ? 'actualizar' : 'registrar'} los datos?`);
     confirmation.componentInstance.onSi.subscribe(() => {
       if (this.producto) {
-        this.update(formData, this.producto.id)
+        // Si es actualización
+        if (this.imagen) {
+          // Si hay nueva imagen, usar FormData
+          const formData = new FormData();
+          formData.append('imagen', this.imagen, this.imagen.name);
+          formData.append('producto', new Blob([JSON.stringify(dato)], { type: 'application/json' }));
+          this.updateWithImage(formData, this.producto.id);
+        } else {
+          // Si no hay imagen nueva, usar JSON
+          this.updateWithoutImage(dato, this.producto.id);
+        }
       } else {
+        // Si es nuevo producto, usar FormData
+        const formData = new FormData();
+        if (this.imagen) {
+          formData.append('imagen', this.imagen, this.imagen.name);
+        }
+        formData.append('producto', new Blob([JSON.stringify(dato)], { type: 'application/json' }));
         this.save(formData);
       }
     });
-
   }
 
   onFileChange(event: Event): void {

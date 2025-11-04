@@ -11,6 +11,8 @@ import { MetodopagoService } from '../../../admin/services/metodo-pago.service';
 import { forkJoin, map } from 'rxjs';
 import { FormValidationUtils } from '../../../../utils/form-validation-utils';
 import { CompraService } from '../../services/compra.service';
+import { CarritoCounterService } from '../../../../core/services/carrito-counter.service';
+import { RouteDataService } from '../../../../core/services/route-data.service';
 
 @Component({
   selector: 'app-carrito',
@@ -41,6 +43,8 @@ export class CarritoComponent {
     private metodoPagoService: MetodopagoService,
     private compraService: CompraService,
     private authService: AuthJWTService,
+    private carritoCounterService: CarritoCounterService,
+    private routeDataService: RouteDataService,
     private router: Router,) { }
 
   ngOnInit(): void {
@@ -51,6 +55,14 @@ export class CarritoComponent {
   initForm = () => {
     this.form = this.formBuilder.group({
       metodo: [null, [Validators.required]],
+      // Campos adicionales para datos de tarjeta (serán usados en la página de pago)
+      cardNumber: [null],
+      cardNombre: [null],
+      cardApellido: [null],
+      cardCvv: [null],
+      cardExpMonth: [null],
+      cardExpYear: [null],
+      cardCuotas: [null],
     });
 
     this.frmValidationUtils = new FormValidationUtils(this.form);
@@ -66,9 +78,12 @@ export class CarritoComponent {
       .pipe(
         map((res) => {
           this.productos = res.productos['dato'];
-          this.metodos = res.metodos['dato'];
+          // Mostrar solo los métodos permitidos en la UI cliente
+          const allMetodos = res.metodos['dato'] || [];
+          this.metodos = allMetodos.filter((m: any) => /yape|plin|visa/i.test(m.tipo));
+          console.log('Métodos cargados:', this.metodos);
         })
-      )
+        )
       .subscribe({
         next: (res) => { },
         error: (err) => {
@@ -83,34 +98,13 @@ export class CarritoComponent {
           });
           this.dataSource = new MatTableDataSource(this.productos);
           this.dataSource.paginator = this.paginator;
+          // Actualizar el contador con la cantidad actual de productos
+          this.carritoCounterService.updateCount(this.productos.length);
         },
       });
   }
 
-  save = (dato: any) => {
-    this.mensaje.showLoading();
-    this.compraService.save(dato).subscribe({
-      next: (res) => {
-        this.mensaje.showMessageSuccess('Compra realizada');
-      },
-      error: (err) => {
-        this.mensaje.showMessageErrorObservable(err);
-      },
-      complete: () => {
-        this.mensaje.closeLoading();
-        this.initForm();
-        this.inicializarData();
-      },
-    });
-  }
-
-  onClickEliminar = (item: any) => {
-    const confirmation = this.mensaje.crearConfirmacion('¿Desea eliminar el registro?');
-    confirmation.componentInstance.onSi.subscribe(() => {
-      this.eliminar(item.id);
-    });
-  }
-
+  // Método modificado: ahora navega a la página de pago en lugar de ejecutar directamente
   onClickPagar = () => {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -128,15 +122,26 @@ export class CarritoComponent {
       });
     });
 
-    const dato = {
+    const datoCompra = {
       usuarioId: user.id,
       metodoPagoId: this.form.get('metodo')?.value,
       detalleCompra: detalle,
+      total: this.total,
+      productos: this.productos,
+      metodos: this.metodos
     };
 
-    const confirmation = this.mensaje.crearConfirmacion(`¿Seguro que desea realizar la compra?`);
+    // Guardar datos para la página de pago
+    this.routeDataService.setData(datoCompra);
+    
+    // Navegar a la página de pago
+    this.router.navigate(['/client/pago']);
+  }
+
+  onClickEliminar = (item: any) => {
+    const confirmation = this.mensaje.crearConfirmacion('¿Desea eliminar el registro?');
     confirmation.componentInstance.onSi.subscribe(() => {
-      this.save(dato);
+      this.eliminar(item.id);
     });
   }
 
@@ -153,6 +158,81 @@ export class CarritoComponent {
         this.mensaje.closeLoading();
         this.inicializarData();
       }
+    });
+  }
+
+  // Métodos para simular pagos (se moverán al PagoComponent)
+  simularPagoYape = () => {
+    this.mensaje.showMessageSuccess('Simulando pago con Yape/Plin...');
+    setTimeout(() => {
+      this.confirmarPago();
+    }, 2000);
+  }
+
+  simularPagoVisa = () => {
+    this.mensaje.showMessageSuccess('Simulando pago con Visa...');
+    setTimeout(() => {
+      this.confirmarPago();
+    }, 3000);
+  }
+
+  // Procesar pago con datos de tarjeta (simulado)
+  procesarPagoConTarjeta = () => {
+    // Validación básica de campos
+    if (!this.form.get('cardNumber')?.value || !this.form.get('cardNombre')?.value || !this.form.get('cardApellido')?.value || !this.form.get('cardCvv')?.value) {
+      this.mensaje.showMessageError('Complete los datos de la tarjeta correctamente');
+      return;
+    }
+
+    this.mensaje.showLoading();
+    this.mensaje.showMessageSuccess('Procesando pago con tarjeta...');
+    
+    setTimeout(() => {
+      this.mensaje.closeLoading();
+      this.confirmarPago();
+    }, 4000);
+  }
+
+  // Confirmar pago exitoso
+  confirmarPago = () => {
+    const user = this.authService.getInfoUsuario();
+
+    let detalle: any[] = [];
+    this.productos.forEach((item) => {
+      detalle.push({
+        productoId: item.producto.id,
+        cantidad: item.cantidad,
+        carritoCompraId: item.id,
+      });
+    });
+
+    const dato = {
+      usuarioId: user.id,
+      metodoPagoId: this.form.get('metodo')?.value,
+      detalleCompra: detalle,
+    };
+
+    this.save(dato);
+  }
+
+  save = (dato: any) => {
+    this.mensaje.showLoading();
+    this.compraService.save(dato).subscribe({
+      next: (res) => {
+        this.mensaje.showMessageSuccess('Compra realizada con éxito');
+        // Resetear el contador cuando se completa la compra
+        this.carritoCounterService.updateCount(0);
+      },
+      error: (err) => {
+        this.mensaje.showMessageErrorObservable(err);
+      },
+      complete: () => {
+        this.mensaje.closeLoading();
+        this.initForm();
+        this.inicializarData();
+        // Navegar a la página de compras
+        this.router.navigate(['/client/compras']);
+      },
     });
   }
 }

@@ -21,6 +21,11 @@ export class ProductoService {
     return this.http.post<any>(path, dato).pipe(map((res) => res));
   }
 
+  updateWithoutImage = (dato: any, id: any): Observable<any> => {
+    const path = this.basePath + `/producto/update-without-image/${id}`;
+    return this.http.post<any>(path, dato).pipe(map((res) => res));
+  }
+
   delete = (id: any): Observable<any> => {
     const path = this.basePath + `/producto/delete/${id}`;
     return this.http.post<any>(path, null).pipe(map((res) => res));

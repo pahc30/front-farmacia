@@ -29,9 +29,12 @@ import { SideMenuClientComponent } from '../../components/side-menu-client/side-
 import { MatMenuModule } from '@angular/material/menu';
 import { CarritoComponent } from './pages/carrito/carrito.component';
 import { CompraComponent } from './pages/compra/compra.component';
+import { PagoComponent } from './pages/pago/pago.component';
 import { MatAccordion, MatExpansionModule } from '@angular/material/expansion';
+import { MatBadgeModule } from '@angular/material/badge';
+
 @NgModule({
-  declarations: [ClientComponent, HomeComponent, SideMenuClientComponent, CarritoComponent, CompraComponent],
+  declarations: [ClientComponent, HomeComponent, SideMenuClientComponent, CarritoComponent, CompraComponent, PagoComponent],
   imports: [
     CommonModule,
     ClientRoutingModule,
@@ -51,6 +54,7 @@ import { MatAccordion, MatExpansionModule } from '@angular/material/expansion';
     MatSidenavModule,
     MatToolbarModule,
     MatAutocompleteModule,
+    MatBadgeModule,
     MatCardModule,
     MatTabsModule,
     MatProgressSpinnerModule,

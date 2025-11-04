@@ -4,6 +4,8 @@ import { ClientComponent } from './client.component';
 import { HomeComponent } from './pages/home/home.component';
 import { CarritoComponent } from './pages/carrito/carrito.component';
 import { CompraComponent } from './pages/compra/compra.component';
+import { PagoComponent } from './pages/pago/pago.component';
+
 const routes: Routes = [
   {
     path: '',
@@ -11,6 +13,7 @@ const routes: Routes = [
     children: [
       { path: 'home', component: HomeComponent },
       { path: 'carrito', component: CarritoComponent },
+      { path: 'pago', component: PagoComponent },
       { path: 'compras', component: CompraComponent },
     ],
   },

@@ -1,0 +1,77 @@
+<div class="container">
+  <div>
+    <h5 class="font-semibold">MIS COMPRAS</h5>
+    <hr />
+  </div>
+
+  <!-- Tabla -->
+  <div class="overflow-auto pt-5">
+    <div class="flex flex-wrap">
+
+      <div class="w-full border-b" *ngFor="let item of compras">
+
+        <mat-card class="h-full !bg-gray-100 !shadow-none">
+          <mat-card-header class="w-full text-c_secondary">
+            <div class="w-full flex justify-between">
+              <div>Código de compra: {{ item.codigo }}</div>
+              <div>{{ item.fecha | date:'yyyy/MM/dd HH:mm' }}</div>
+            </div>
+          </mat-card-header>
+          <mat-card-content class="h-full">
+            <div class="flex flex-col">
+              <div class="flex justify-between flex-wrap pt-5 pb-5">
+                <div>
+                  <label>Método de pago: </label> {{ item.metodoPago }}
+                </div>
+                <div>
+                  <label>IGV: </label> {{ item.igv * 100 }} %
+                </div>
+                <div>
+                  <label>Total: </label> {{ item.total }}
+                </div>
+              </div>
+
+              <div>
+                <mat-accordion>
+                  <mat-expansion-panel class="!rounded-none">
+                    <mat-expansion-panel-header class="!bg-gray-200">
+                      <mat-panel-title>Detalle de compra</mat-panel-title>
+                    </mat-expansion-panel-header>
+
+                    <table class="w-full">
+                      <thead>
+                        <th class="text-start"></th>
+                        <th class="text-start font-medium">Cantidad</th>
+                        <th class="text-start font-medium">Cod.Producto</th>
+                        <th class="text-start font-medium">Producto</th>
+                        <th class="text-start font-medium">Categoría</th>
+                        <th class="text-start font-medium">Precio Unitario
+                        <th>
+                      </thead>
+                      <tbody class="text-c_secondary">
+                        <tr *ngFor="let d of item.detalleCompra" class="border-b-2">
+                          <td class="flex justify-start">
+                            <div class="text-end p-2 border">
+                              <img class="max-h-50 max-w-50" src="{{ d.producto.url }}" alt="">
+                            </div>
+                          </td>
+                          <td>{{ d.cantidad }}</td>
+                          <td>{{ d.producto.codigo }}</td>
+                          <td>{{ d.producto.nombre }}</td>
+                          <td>{{ d.producto.categoria }}</td>
+                          <td>S/.{{ d.producto.precio }}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+
+                  </mat-expansion-panel>
+                </mat-accordion>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+    </div>
+  </div>
+</div>

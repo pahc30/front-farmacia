@@ -11,6 +11,7 @@ import { CategoriaService } from '../../../admin/services/categoria.service';
 import { forkJoin, map } from 'rxjs';
 import { AuthJWTService } from '../../../../core/services/auth.service';
 import { CarritoService } from '../../services/carrito.service';
+import { CarritoCounterService } from '../../../../core/services/carrito-counter.service';
 
 @Component({
   selector: 'app-home',
@@ -39,6 +40,7 @@ export class HomeComponent implements OnInit {
     private categoriaService: CategoriaService,
     private authService: AuthJWTService,
     private carritoService: CarritoService,
+    private carritoCounterService: CarritoCounterService,
     private router: Router,) { }
 
   ngOnInit(): void {
@@ -122,6 +124,8 @@ export class HomeComponent implements OnInit {
     this.carritoService.save(dato).subscribe({
       next: (res) => {
         this.mensaje.showMessageSuccess('Se agregó el producto al carrito de compras');
+        // Incrementar el contador del carrito
+        this.carritoCounterService.incrementCount();
       },
       error: (err) => {
         this.mensaje.showMessageErrorObservable(err);

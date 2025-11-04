@@ -1,0 +1,329 @@
+import { Component, ViewChild } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { MatPaginator } from '@angular/material/paginator';
+import { MatSort } from '@angular/material/sort';
+import { MatTableDataSource } from '@angular/material/table';
+import { Router } from '@angular/router';
+import { MensajesService } from '../../../../core/services/mensajes.service';
+import { CarritoService } from '../../services/carrito.service';
+import { AuthJWTService } from '../../../../core/services/auth.service';
+import { MetodopagoService } from '../../../admin/services/metodo-pago.service';
+import { forkJoin, map } from 'rxjs';
+import { FormValidationUtils } from '../../../../utils/form-validation-utils';
+import { CompraService } from '../../services/compra.service';
+
+@Component({
+  selector: 'app-carrito',
+  templateUrl: './carrito.component.html',
+  styleUrl: './carrito.component.css'
+})
+export class CarritoComponent {
+
+  displayedColumns: string[] = [
+    'id', 'codigo', 'nombre',
+    'precio', 'cantidad', 'categoria', 'imagen', 'acciones'
+  ];
+  dataSource!: MatTableDataSource<any[]>;
+
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
+
+  total: number = 0;
+  productos: any[] = [];
+  metodos: any[] = [];
+  qrUrl: string | null = null;
+  
+  // Variables para el nuevo sistema de pagos
+  compraRealizada: any = null;
+  transaccionCreada: any = null;
+  mostrarProcesoPago: boolean = false;
+
+  frmValidationUtils!: FormValidationUtils;
+  form!: FormGroup;
+
+  constructor(private formBuilder: FormBuilder,
+    private mensaje: MensajesService,
+    private carritoService: CarritoService,
+    private metodoPagoService: MetodopagoService,
+    private compraService: CompraService,
+    private authService: AuthJWTService,
+    private router: Router,) { }
+
+  ngOnInit(): void {
+    this.initForm();
+    this.inicializarData();
+  }
+
+  initForm = () => {
+      this.form = this.formBuilder.group({
+        metodo: [null, [Validators.required]],
+        // campos opcionales para tarjeta (solo se usan si el cliente
+        // elige Visa)
+        cardNumber: [null],
+        cardNombre: [null],
+        cardApellido: [null],
+        cardCvv: [null],
+        cardExpMonth: [null],
+        cardExpYear: [null],
+        cardCuotas: [null],
+      });
+
+      this.frmValidationUtils = new FormValidationUtils(this.form);
+  }
+
+  inicializarData = () => {
+    const user = this.authService.getInfoUsuario();
+    this.mensaje.showLoading();
+    forkJoin({
+      productos: this.carritoService.list(user.id),
+      metodos: this.metodoPagoService.list(),
+    })
+      .pipe(
+          map((res) => {
+          this.productos = res.productos['dato'];
+          // Mostrar solo los métodos permitidos en la UI cliente
+          const allMetodos = res.metodos['dato'] || [];
+          this.metodos = allMetodos.filter((m: any) => /yape|plin|visa/i.test(m.tipo));
+          console.log('Métodos cargados:', this.metodos);
+        })
+        )
+      .subscribe({
+        next: (res) => { },
+        error: (err) => {
+          this.mensaje.showMessageErrorObservable(err);
+        },
+        complete: () => {
+          this.mensaje.closeLoading();
+
+          this.total = 0;
+          this.productos.forEach((item: any) => {
+            this.total += item.producto?.precio * item.cantidad;
+          });
+          this.dataSource = new MatTableDataSource(this.productos);
+          this.dataSource.paginator = this.paginator;
+        },
+      });
+  }
+
+  save = (dato: any) => {
+    this.mensaje.showLoading();
+    this.compraService.save(dato).subscribe({
+      next: (res) => {
+        this.compraRealizada = res.dato;
+        this.mensaje.showMessageSuccess('Compra registrada exitosamente');
+        this.procederConPago();
+      },
+      error: (err) => {
+        this.mensaje.showMessageErrorObservable(err);
+      },
+      complete: () => {
+        this.mensaje.closeLoading();
+      },
+    });
+  }
+
+  procederConPago = () => {
+    if (!this.compraRealizada) return;
+
+    const metodoPagoSeleccionado = this.metodos.find(m => m.id === this.form.get('metodo')?.value);
+    
+    // Si es efectivo, no necesita procesamiento de pago
+    if (metodoPagoSeleccionado?.nombre?.toLowerCase().includes('efectivo')) {
+      this.mensaje.showMessageSuccess('Compra realizada. Pago en efectivo al recibir el producto.');
+      this.finalizarCompra();
+      return;
+    }
+
+    // Para yape/plin y visa, crear payment intent
+    this.crearPaymentIntent(metodoPagoSeleccionado);
+  }
+
+  crearPaymentIntent = (metodoPago: any) => {
+    console.log('🔍 Método de pago seleccionado:', metodoPago);
+    console.log('🔍 Campo nombre:', metodoPago?.nombre);
+    console.log('🔍 Campo tipo:', metodoPago?.tipo);
+    
+    const paymentData = {
+      compraId: this.compraRealizada.id,
+      monto: this.total,
+      metodoPago: metodoPago.nombre,
+      descripcion: `Compra #${this.compraRealizada.codigo}`,
+      moneda: 'PEN'
+    };
+
+    this.mensaje.showLoading();
+    this.metodoPagoService.crearPaymentIntent(paymentData).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.transaccionCreada = res;
+          // Asegurar que haya un id usable para confirmar (simulación)
+          if (!this.transaccionCreada.transaccionId) {
+            this.transaccionCreada.transaccionId = Date.now();
+          }
+
+          // Si es Yape/Plin, generamos QR usando Google Chart API
+          const metodoTexto = (metodoPago?.nombre || metodoPago?.tipo || '').toLowerCase();
+          console.log('🔍 Texto del método para QR:', metodoTexto);
+          
+          if (metodoTexto.includes('yape') || metodoTexto.includes('plin')) {
+            const payload = `YAPE|amount:${this.total}|compra:${this.compraRealizada.id}|intent:${this.transaccionCreada.stripePaymentIntentId || this.transaccionCreada.clientSecret}`;
+            this.qrUrl = 'https://chart.googleapis.com/chart?cht=qr&chs=300x300&chl=' + encodeURIComponent(payload);
+            console.log('✅ QR generado para Yape/Plin:', this.qrUrl);
+          } else {
+            this.qrUrl = null;
+            console.log('❌ No es Yape/Plin, no se genera QR');
+          }
+
+          this.mostrarProcesoPago = true;
+          this.mensaje.showMessageSuccess('Intent de pago creado. Proceda con el pago.');
+        } else {
+          this.mensaje.showMessageError(res.message || 'Error creando intent de pago');
+        }
+      },
+      error: (err) => {
+        this.mensaje.showMessageErrorObservable(err);
+      },
+      complete: () => {
+        this.mensaje.closeLoading();
+      }
+    });
+  }
+
+  confirmarPago = () => {
+    if (!this.transaccionCreada?.transaccionId) return;
+
+    this.mensaje.showLoading();
+    this.metodoPagoService.confirmarPago(this.transaccionCreada.transaccionId).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.mensaje.showMessageSuccess('¡Pago confirmado exitosamente!');
+          this.finalizarCompra();
+        } else {
+          this.mensaje.showMessageError(res.message || 'Error confirmando el pago');
+        }
+      },
+      error: (err) => {
+        this.mensaje.showMessageErrorObservable(err);
+      },
+      complete: () => {
+        this.mensaje.closeLoading();
+      }
+    });
+  }
+
+  descargarBoleta = () => {
+    if (!this.compraRealizada?.id) return;
+
+    this.mensaje.showLoading();
+    this.metodoPagoService.descargarBoletaPorCompra(this.compraRealizada.id).subscribe({
+      next: (response) => {
+        const blob = response.body;
+        if (blob) {
+          const url = window.URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = `boleta_compra_${this.compraRealizada.id}.pdf`;
+          link.click();
+          window.URL.revokeObjectURL(url);
+          this.mensaje.showMessageSuccess('Boleta descargada exitosamente');
+        }
+      },
+      error: (err) => {
+        this.mensaje.showMessageErrorObservable(err);
+      },
+      complete: () => {
+        this.mensaje.closeLoading();
+      }
+    });
+  }
+
+  finalizarCompra = () => {
+    this.mostrarProcesoPago = false;
+    this.initForm();
+    this.inicializarData();
+    // Opcional: navegar a mis compras
+    // this.router.navigate(['client/compras']);
+  }
+
+  onClickEliminar = (item: any) => {
+    const confirmation = this.mensaje.crearConfirmacion('¿Desea eliminar el registro?');
+    confirmation.componentInstance.onSi.subscribe(() => {
+      this.eliminar(item.id);
+    });
+  }
+
+  onClickPagar = () => {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      return;
+    }
+
+    const user = this.authService.getInfoUsuario();
+
+    let detalle: any[] = [];
+    this.productos.forEach((item) => {
+      detalle.push({
+        productoId: item.producto.id,
+        cantidad: item.cantidad,
+        carritoCompraId: item.id,
+      });
+    });
+
+    const dato = {
+      usuarioId: user.id,
+      metodoPagoId: this.form.get('metodo')?.value,
+      detalleCompra: detalle,
+    };
+
+    const confirmation = this.mensaje.crearConfirmacion(`¿Seguro que desea realizar la compra?`);
+    confirmation.componentInstance.onSi.subscribe(() => {
+      this.save(dato);
+    });
+  }
+
+  eliminar = (id: any) => {
+    this.mensaje.showLoading();
+    this.carritoService.delete(id).subscribe({
+      next: (res) => {
+        this.mensaje.showMessageSuccess('Registro eliminado correctamente');
+      },
+      error: (err) => {
+        this.mensaje.showMessageErrorObservable(err);
+      },
+      complete: () => {
+        this.mensaje.closeLoading();
+        this.inicializarData();
+      }
+    });
+  }
+
+  // Métodos para simular pagos
+  simularPagoYape = () => {
+    this.mensaje.showMessageSuccess('Simulando pago con Yape/Plin...');
+    setTimeout(() => {
+      this.confirmarPago();
+    }, 2000);
+  }
+
+  simularPagoVisa = () => {
+    this.mensaje.showMessageSuccess('Simulando pago con Visa...');
+    setTimeout(() => {
+      this.confirmarPago();
+    }, 3000);
+  }
+
+  // Procesar pago con datos de tarjeta (simulado)
+  procesarPagoConTarjeta = () => {
+    // Validación básica de campos
+    if (!this.form.get('cardNumber')?.value || !this.form.get('cardNombre')?.value || !this.form.get('cardApellido')?.value || !this.form.get('cardCvv')?.value) {
+      this.mensaje.showMessageError('Complete los datos de la tarjeta correctamente');
+      return;
+    }
+
+    this.mensaje.showMessageSuccess('Procesando pago con tarjeta...');
+    // En el sistema simulado, sólo esperamos y confirmamos
+    setTimeout(() => {
+      this.confirmarPago();
+    }, 2000);
+  }
+}
