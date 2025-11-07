@@ -86,9 +86,4 @@ export class UsuarioService {
     return this.http.post<any>(path, null).pipe(map((res) => res));
   }
 
-  findByUsername = (username: string): Observable<any> => {
-    const path = this.basePath + `/usuarios/findByUsername/${username}`;
-    return this.http.post<any>(path, null).pipe(map((res) => res));
-  }
-
 }

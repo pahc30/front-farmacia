@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MensajesService } from '../../../../core/services/mensajes.service';
 import { AuthService } from '../../services/auth.service';
+import { UsuarioService } from '../../../admin/services/usuario.service';
 import { FormValidationUtils } from '../../../../utils/form-validation-utils';
 
 @Component({
@@ -18,6 +19,7 @@ export class LoginComponent implements OnInit {
   constructor(
     private formBuilder: FormBuilder,
     private authService: AuthService,
+    private usuarioService: UsuarioService,
     private mensaje: MensajesService,
     private router: Router,
   ) {}
@@ -59,16 +61,45 @@ export class LoginComponent implements OnInit {
         if(res?.estado == 0){
           this.mensaje.showMessageError(res?.mensaje);
         }else{
+          // Guardar datos del auth service
           localStorage.setItem('user', JSON.stringify(res?.dato?.user));
           localStorage.setItem('jwtToken', res?.dato?.accessToken);
+          localStorage.setItem('username', username);
 
-          const rol = res?.dato?.user?.rol;
-          if(rol && rol.toUpperCase() == 'ADMINISTRADOR'){
-            this.router.navigate(['admin/dashboard']);
-          }else{
-            this.router.navigate(['client/home']);
-          }
+          // Buscar el usuario en el servicio de usuarios para obtener el ID correcto
+          this.usuarioService.findByUsername(username).subscribe({
+            next: (usuarioRes) => {
+              if(usuarioRes?.estado == 1 && usuarioRes?.dato) {
+                // Guardar el ID del servicio de usuarios para las compras
+                localStorage.setItem('usuarioServiceId', usuarioRes.dato.id.toString());
+                console.log('Usuario encontrado en servicio usuarios:', usuarioRes.dato);
+              } else {
+                console.warn('Usuario no encontrado en servicio usuarios');
+                // Usar el ID del auth como fallback
+                localStorage.setItem('usuarioServiceId', res?.dato?.user?.id.toString());
+              }
 
+              // Redirigir según el rol
+              const rol = res?.dato?.user?.rol;
+              if(rol && rol.toUpperCase() == 'ADMINISTRADOR'){
+                this.router.navigate(['admin/dashboard']);
+              }else{
+                this.router.navigate(['client/home']);
+              }
+            },
+            error: (err) => {
+              console.error('Error buscando usuario en servicio usuarios:', err);
+              // Usar el ID del auth como fallback
+              localStorage.setItem('usuarioServiceId', res?.dato?.user?.id.toString());
+              
+              const rol = res?.dato?.user?.rol;
+              if(rol && rol.toUpperCase() == 'ADMINISTRADOR'){
+                this.router.navigate(['admin/dashboard']);
+              }else{
+                this.router.navigate(['client/home']);
+              }
+            }
+          });
         }
       },
       error: (err) => {
@@ -77,7 +108,6 @@ export class LoginComponent implements OnInit {
       complete: () => {},
     });
   }
-
 
   onKeyEnter(event: any): void{
     if(event.charCode == 13){

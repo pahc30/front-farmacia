@@ -85,8 +85,7 @@ export class HomeComponent implements OnInit {
     const filter = this.form.controls['filter']?.value?.trim();
     const categoria = event ?? this.form.controls['categoria'].value;
 
-    const filterLower = filter ? filter.toLowerCase() : "";
-    this.items = this.productos.filter((x) => ((!filter || x.nombre.toLowerCase().includes(filterLower) || x.categoria.nombre.toLowerCase().includes(filterLower)) && (categoria == 0 || x.categoria.id == categoria)));
+    this.items = this.productos.filter((x) => ((x.nombre.includes(filter) || x.categoria.nombre.includes(filter)) && (categoria == 0 || x.categoria.id == categoria)));
     this.totalItems = this.items.length;
     this.actualizarPagina();
   }

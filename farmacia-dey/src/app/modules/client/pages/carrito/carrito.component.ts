@@ -123,7 +123,7 @@ export class CarritoComponent {
     });
 
     const datoCompra = {
-      usuarioId: user.id,
+      usuarioId: parseInt(localStorage.getItem('usuarioServiceId') || user.id.toString()),
       metodoPagoId: this.form.get('metodo')?.value,
       detalleCompra: detalle,
       total: this.total,
@@ -207,7 +207,7 @@ export class CarritoComponent {
     });
 
     const dato = {
-      usuarioId: user.id,
+      usuarioId: parseInt(localStorage.getItem('usuarioServiceId') || user.id.toString()),
       metodoPagoId: this.form.get('metodo')?.value,
       detalleCompra: detalle,
     };

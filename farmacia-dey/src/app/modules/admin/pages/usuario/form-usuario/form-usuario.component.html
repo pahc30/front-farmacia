@@ -92,6 +92,18 @@
           </mat-form-field>
         </div>
 
+        <!-- Nueva opción para crear credenciales de login -->
+        <div class="w-full sm:w-1/2 pr-1 pb-1" *ngIf="!usuario">
+          <div class="mt-4">
+            <mat-checkbox formControlName="crearCredencialesLogin" color="primary">
+              <span class="text-sm">Crear credenciales de acceso (login)</span>
+            </mat-checkbox>
+            <div class="text-xs text-gray-600 mt-1">
+              Si activas esta opción, el usuario podrá hacer login en el sistema
+            </div>
+          </div>
+        </div>
+
         <div class="w-full mt-2">
           <div class="flex gap-1">
             <button mat-flat-button class="!bg-minjus_primary !text-white !text-lg" (click)="onClickGuardar()">{{

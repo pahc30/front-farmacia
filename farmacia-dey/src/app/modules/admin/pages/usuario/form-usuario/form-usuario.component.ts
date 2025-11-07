@@ -49,6 +49,7 @@ export class FormUsuarioComponent implements OnInit {
       ],
       password: [null, [Validators.required, Validators.minLength(5)]],
       rol: [this.usuario?.rol, [Validators.required]],
+      crearCredencialesLogin: [true], // Nueva opción para crear credenciales de login
     });
 
     this.frmValidationUtils = new FormValidationUtils(this.form);
@@ -71,18 +72,43 @@ export class FormUsuarioComponent implements OnInit {
 
   save = (dato: any ) => {
     this.mensaje.showLoading();
-    this.usuarioService.save(dato).subscribe({
-      next: (res) => {
-        this.mensaje.showMessageSuccess('Usuario registrado');
-      },
-      error: (err) => {
-        this.mensaje.showMessageErrorObservable(err);
-      },
-      complete: () => {
-        this.mensaje.closeLoading();
-        this.initForm();
-      },
-    });
+    
+    // Verificar si se debe crear credenciales de login
+    const crearCredenciales = this.form.get('crearCredencialesLogin')?.value;
+    
+    if (crearCredenciales) {
+      // Usar el nuevo método que crea en ambas tablas
+      this.usuarioService.saveWithAuth(dato).subscribe({
+        next: (res) => {
+          if (res.estado === 1) {
+            this.mensaje.showMessageSuccess('Usuario registrado con acceso de login');
+          } else {
+            this.mensaje.showMessageError(res.mensaje);
+          }
+        },
+        error: (err) => {
+          this.mensaje.showMessageErrorObservable(err);
+        },
+        complete: () => {
+          this.mensaje.closeLoading();
+          this.initForm();
+        },
+      });
+    } else {
+      // Usar el método original (solo en usuario_schema)
+      this.usuarioService.save(dato).subscribe({
+        next: (res) => {
+          this.mensaje.showMessageSuccess('Usuario registrado (sin acceso de login)');
+        },
+        error: (err) => {
+          this.mensaje.showMessageErrorObservable(err);
+        },
+        complete: () => {
+          this.mensaje.closeLoading();
+          this.initForm();
+        },
+      });
+    }
   }
 
   update = (dato: any, id: any ) => {
@@ -126,7 +152,10 @@ export class FormUsuarioComponent implements OnInit {
       rol: this.form.get('rol')?.value,
     };
 
-    const confirmation = this.mensaje.crearConfirmacion(`¿Seguro que desea ${this.usuario? 'actualizar': 'registrar'} los datos?`);
+    const crearCredenciales = this.form.get('crearCredencialesLogin')?.value;
+    const accionTexto = this.usuario ? 'actualizar' : (crearCredenciales ? 'registrar con acceso de login' : 'registrar sin acceso de login');
+    
+    const confirmation = this.mensaje.crearConfirmacion(`¿Seguro que desea ${accionTexto} los datos?`);
     confirmation.componentInstance.onSi.subscribe(() => {
       if(this.usuario){
         this.update(dato, this.usuario.id)
