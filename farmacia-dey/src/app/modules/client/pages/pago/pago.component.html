@@ -92,6 +92,16 @@
 
   <!-- Simulación de QR para Yape/Plin -->
   <div *ngIf="mostrandoPago && esYapeOPlin()" class="mb-6 text-center bg-blue-50 p-6 rounded-lg border">
+    <!-- Timer de cuenta regresiva -->
+    <div *ngIf="timerActivo" class="mb-4 p-3 bg-orange-100 border border-orange-300 rounded-lg">
+      <div class="flex items-center justify-center space-x-2">
+        <mat-icon class="text-orange-600">timer</mat-icon>
+        <span class="text-orange-800 font-bold text-lg">{{ formatearTiempo() }}</span>
+        <span class="text-orange-600 text-sm">restante</span>
+      </div>
+      <p class="text-orange-700 text-sm mt-1">⚠️ Complete el pago antes de que termine el tiempo</p>
+    </div>
+    
     <h3 class="text-xl font-semibold mb-4 text-blue-800">💳 Escanea el código QR</h3>
     <div class="bg-white p-6 rounded border inline-block shadow-lg">
       <img [src]="qrUrl" alt="Código QR para pago" class="w-64 h-64 border-2 border-gray-300">
@@ -113,6 +123,16 @@
 
   <!-- Simulación de formulario para Visa -->
   <div *ngIf="mostrandoPago && esVisa()" class="mb-6 text-center bg-green-50 p-6 rounded-lg border">
+    <!-- Timer de cuenta regresiva -->
+    <div *ngIf="timerActivo" class="mb-4 p-3 bg-orange-100 border border-orange-300 rounded-lg">
+      <div class="flex items-center justify-center space-x-2">
+        <mat-icon class="text-orange-600">timer</mat-icon>
+        <span class="text-orange-800 font-bold text-lg">{{ formatearTiempo() }}</span>
+        <span class="text-orange-600 text-sm">restante</span>
+      </div>
+      <p class="text-orange-700 text-sm mt-1">⚠️ Complete el pago antes de que termine el tiempo</p>
+    </div>
+    
     <h3 class="text-xl font-semibold mb-4 text-green-800">💳 Pago con Tarjeta Visa</h3>
     <div class="p-4 bg-white rounded border shadow">
       <p class="text-green-700 font-medium">✅ Datos de tarjeta validados correctamente</p>
@@ -139,7 +159,7 @@
       <button *ngIf="!mostrandoPago && esVisa()" 
               mat-raised-button 
               color="primary" 
-              (click)="simularPagoVisa()">
+              (click)="procesarPagoVisa()">
         Pagar con Tarjeta
       </button>
 

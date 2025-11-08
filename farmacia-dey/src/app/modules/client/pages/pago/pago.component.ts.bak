@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MensajesService } from '../../../../core/services/mensajes.service';
@@ -13,7 +13,7 @@ import { CarritoCounterService } from '../../../../core/services/carrito-counter
   templateUrl: './pago.component.html',
   styleUrls: ['./pago.component.css']
 })
-export class PagoComponent implements OnInit, OnDestroy {
+export class PagoComponent implements OnInit {
 
   // Variables principales de los datos del carrito
   datoCompra: any = null;
@@ -27,11 +27,6 @@ export class PagoComponent implements OnInit, OnDestroy {
   qrUrl: string | null = null;
   mostrandoPago: boolean = false;
   pagoSimulado: boolean = false;
-  
-  // Timer de pago
-  timerActivo: boolean = false;
-  tiempoRestante: number = 60;
-  intervalTimer: any = null;
   
   // Formulario para Visa
   form!: FormGroup;
@@ -116,11 +111,10 @@ export class PagoComponent implements OnInit, OnDestroy {
     const payload = `Pago: S/.${this.total} - Compra farmacia DeY`;
     this.qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(payload)}`;
     this.mostrandoPago = true;
-    this.iniciarTimer();
   }
 
   // Método para simular pago con Visa
-  procesarPagoVisa(): void {
+  simularPagoVisa(): void {
     if (!this.metodoPagoSeleccionado) {
       this.mensaje.showMessageError('Selecciona un método de pago');
       return;
@@ -133,7 +127,7 @@ export class PagoComponent implements OnInit, OnDestroy {
     }
 
     // Validar campos de tarjeta
-    if (!this.form.get('cardNumber')?.value || !this.form.get('cardNombre')?.value ||
+    if (!this.form.get('cardNumber')?.value || !this.form.get('cardNombre')?.value || 
         !this.form.get('cardApellido')?.value || !this.form.get('cardCvv')?.value) {
       this.mensaje.showMessageError('Complete todos los datos de la tarjeta');
       return;
@@ -142,7 +136,6 @@ export class PagoComponent implements OnInit, OnDestroy {
     // Solo una notificación de validación exitosa
     this.mensaje.showMessageSuccess('Datos de tarjeta validados correctamente');
     this.mostrandoPago = true;
-    this.iniciarTimer();
   }
 
   // Confirmar pago y completar la compra
@@ -158,76 +151,31 @@ export class PagoComponent implements OnInit, OnDestroy {
 
     // Simular tiempo de procesamiento
     setTimeout(() => {
-      // 1. Crear la compra primero
+      // Crear objeto de compra final
       const datoFinal = {
         usuarioId: this.datoCompra.usuarioId,
         metodoPagoId: this.metodoPagoSeleccionado?.id || this.datoCompra.metodoPagoId,
         detalleCompra: this.datoCompra.detalleCompra,
       };
 
+      // Ejecutar la compra usando el servicio
       this.compraService.save(datoFinal).subscribe({
-        next: (compraRes) => {
-          // 2. Crear PaymentIntent (transacción) con el ID de compra
-          const paymentRequest = {
-            compraId: compraRes.dato.id,
-            metodoPagoId: this.metodoPagoSeleccionado?.id,
-            monto: this.total,
-            moneda: 'PEN',
-            descripcion: `Pago farmacia - ${this.productos.length} productos`,
-            // Datos de la tarjeta (para Visa)
-            cardNumber: this.form.get('cardNumber')?.value,
-            cardNombre: this.form.get('cardNombre')?.value,
-            cardApellido: this.form.get('cardApellido')?.value,
-            cardCvv: this.form.get('cardCvv')?.value,
-            cardExpMonth: this.form.get('cardExpMonth')?.value,
-            cardExpYear: this.form.get('cardExpYear')?.value,
-            cardCuotas: this.form.get('cardCuotas')?.value || 1
-          };
-
-          this.metodoPagoService.crearPaymentIntent(paymentRequest).subscribe({
-            next: (paymentRes) => {
-              if (paymentRes.success) {
-                // 3. Confirmar el pago
-                this.metodoPagoService.confirmarPago(paymentRes.transaccionId).subscribe({
-                  next: (confirmRes) => {
-                    this.mensaje.closeLoading();
-                    if (confirmRes.success) {
-                      this.detenerTimer();
-                      this.mensaje.showMessageSuccess('¡Pago confirmado exitosamente!');
-                      this.carritoCounterService.updateCount(0);
-                      // Navegar a la página de compras después de un delay
-                      setTimeout(() => {
-                        this.router.navigate(['/client/compras']);
-                      }, 2000);
-                    } else {
-                      this.mensaje.showMessageError('Error confirmando el pago');
-                      this.pagoSimulado = false;
-                    }
-                  },
-                  error: (err) => {
-                    this.detenerTimer();
-                    this.mensaje.closeLoading();
-                    this.mensaje.showMessageError('Error en la confirmación del pago');
-                    this.pagoSimulado = false;
-                  }
-                });
-              } else {
-                this.mensaje.closeLoading();
-                this.mensaje.showMessageError('Error procesando el pago: ' + paymentRes.message);
-                this.pagoSimulado = false;
-              }
-            },
-            error: (err) => {
-              this.mensaje.closeLoading();
-              this.mensaje.showMessageErrorObservable(err);
-              this.pagoSimulado = false;
-            }
-          });
+        next: (res) => {
+          this.mensaje.closeLoading();
+          this.mensaje.showMessageSuccess('¡Pago confirmado exitosamente!');
+          // Resetear el contador del carrito
+          this.carritoCounterService.updateCount(0);
         },
         error: (err) => {
           this.mensaje.closeLoading();
           this.mensaje.showMessageErrorObservable(err);
-          this.pagoSimulado = false;
+          this.pagoSimulado = false; // Permitir reintentar
+        },
+        complete: () => {
+          // Navegar a la página de compras después de un delay más corto
+          setTimeout(() => {
+            this.router.navigate(['/client/compras']);
+          }, 2000);
         }
       });
     }, 1500); // Reducido a 1.5 segundos de procesamiento
@@ -240,7 +188,6 @@ export class PagoComponent implements OnInit, OnDestroy {
 
   // Cancelar el proceso de pago
   cancelarPago(): void {
-    this.detenerTimer();
     this.regresarCarrito();
   }
 
@@ -255,47 +202,5 @@ export class PagoComponent implements OnInit, OnDestroy {
     if (!this.metodoPagoSeleccionado) return false;
     const tipo = this.metodoPagoSeleccionado.tipo.toLowerCase();
     return tipo.includes('visa');
-  }
-
-  // Funciones del timer de pago
-  iniciarTimer(): void {
-    this.timerActivo = true;
-    this.tiempoRestante = 60;
-    
-    this.intervalTimer = setInterval(() => {
-      this.tiempoRestante--;
-      
-      if (this.tiempoRestante <= 0) {
-        this.timeoutPago();
-      }
-    }, 1000);
-  }
-
-  detenerTimer(): void {
-    if (this.intervalTimer) {
-      clearInterval(this.intervalTimer);
-      this.intervalTimer = null;
-    }
-    this.timerActivo = false;
-  }
-
-  timeoutPago(): void {
-    this.detenerTimer();
-    this.mostrandoPago = false;
-    this.pagoSimulado = false;
-    this.mensaje.showMessageWarning('⏰ Tiempo agotado. La compra ha sido cancelada por inactividad');
-    
-    // Aquí podrías llamar al backend para marcar la transacción como fallida si ya se creó
-    // this.metodoPagoService.cancelarPorTimeout(transaccionId)
-  }
-
-  formatearTiempo(): string {
-    const minutos = Math.floor(this.tiempoRestante / 60);
-    const segundos = this.tiempoRestante % 60;
-    return `${minutos}:${segundos.toString().padStart(2, '0')}`;
-  }
-
-  ngOnDestroy(): void {
-    this.detenerTimer();
   }
 }

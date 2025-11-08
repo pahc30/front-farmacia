@@ -50,89 +50,10 @@
                   DESCARGAR BOLETA
                 </button>
                 
-                <button mat-stroked-button color="accent" (click)="obtenerTransacciones(item.id)" 
-                        [disabled]="cargandoTransacciones[item.id]">
-                  <mat-icon *ngIf="!cargandoTransacciones[item.id]">payment</mat-icon>
-                  <mat-spinner *ngIf="cargandoTransacciones[item.id]" diameter="16" class="mr-2"></mat-spinner>
-                  {{ mostrandoTransacciones[item.id] ? 'OCULTAR TRANSACCIONES' : 'VER TRANSACCIONES' }}
+                <button mat-stroked-button color="accent" (click)="obtenerTransacciones(item.id)">
+                  <mat-icon>payment</mat-icon>
+                  VER TRANSACCIONES
                 </button>
-              </div>
-
-              <!-- Sección de Transacciones -->
-              <div *ngIf="mostrandoTransacciones[item.id]" class="mb-4">
-                <mat-card class="!bg-blue-50 !border !border-blue-200">
-                  <mat-card-header>
-                    <mat-card-title class="!text-base">
-                      <mat-icon class="mr-2">payment</mat-icon>
-                      Transacciones de Pago
-                    </mat-card-title>
-                  </mat-card-header>
-                  
-                  <mat-card-content>
-                    <div *ngIf="transacciones[item.id]?.length === 0" class="text-center py-4 text-gray-600">
-                      <mat-icon class="text-4xl mb-2">info</mat-icon>
-                      <p>No hay transacciones registradas para esta compra</p>
-                    </div>
-
-                    <div *ngIf="(transacciones[item.id]?.length ?? 0) > 0" class="space-y-3">
-                      <div *ngFor="let transaccion of transacciones[item.id]; let i = index" 
-                           class="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
-                        
-                        <div class="flex justify-between items-start mb-3">
-                          <div>
-                            <h4 class="font-semibold text-gray-800">
-                              <mat-icon class="mr-1 text-sm">receipt</mat-icon>
-                              Transacción #{{ transaccion.transaccionId }}
-                            </h4>
-                            <p class="text-sm text-gray-600">{{ i + 1 }} de {{ transacciones[item.id].length }}</p>
-                          </div>
-                          <span [class]="'px-3 py-1 rounded-full text-xs font-medium ' + getEstadoClass(transaccion.estado)">
-                            {{ getEstadoTexto(transaccion.estado) }}
-                          </span>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                          <div class="flex items-center">
-                            <mat-icon class="mr-2 text-green-600">attach_money</mat-icon>
-                            <span class="font-medium">Monto:</span>
-                            <span class="ml-1 font-semibold text-green-600">{{ transaccion.moneda }} {{ transaccion.monto }}</span>
-                          </div>
-                          
-                          <div class="flex items-center">
-                            <mat-icon class="mr-2 text-blue-600">schedule</mat-icon>
-                            <span class="font-medium">Creación:</span>
-                            <span class="ml-1">{{ formatearFecha(transaccion.fechaCreacion) }}</span>
-                          </div>
-                          
-                          <div *ngIf="transaccion.fechaPago" class="flex items-center">
-                            <mat-icon class="mr-2 text-green-600">check_circle</mat-icon>
-                            <span class="font-medium">Pago:</span>
-                            <span class="ml-1">{{ formatearFecha(transaccion.fechaPago) }}</span>
-                          </div>
-                          
-                          <div class="flex items-center">
-                            <mat-icon class="mr-2 text-gray-600">info</mat-icon>
-                            <span class="font-medium">Descripción:</span>
-                            <span class="ml-1">{{ transaccion.descripcion || 'Sin descripción' }}</span>
-                          </div>
-                        </div>
-
-                        <div *ngIf="transaccion.referenciaExterna" class="mt-2 p-2 bg-gray-50 rounded text-sm">
-                          <span class="font-medium">Referencia:</span>
-                          <span class="ml-1 font-mono">{{ transaccion.referenciaExterna }}</span>
-                        </div>
-
-                        <div *ngIf="transaccion.mensajeError" class="mt-2 p-2 bg-red-50 border border-red-200 rounded text-sm">
-                          <div class="flex items-center text-red-700">
-                            <mat-icon class="mr-2">error</mat-icon>
-                            <span class="font-medium">Error:</span>
-                            <span class="ml-1">{{ transaccion.mensajeError }}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </mat-card-content>
-                </mat-card>
               </div>
 
               <div>

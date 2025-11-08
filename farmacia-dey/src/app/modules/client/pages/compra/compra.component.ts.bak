@@ -28,7 +28,7 @@ export class CompraComponent implements OnInit {
     this.mensaje.showLoading();
 
     const user = this.authService.getInfoUsuario();
-    this.compraService.list(user.id).subscribe({
+    this.compraService.list(parseInt(localStorage.getItem("usuarioServiceId") || user.id.toString())).subscribe({
       next: (res) => {
         this.compras = res.dato;
       },

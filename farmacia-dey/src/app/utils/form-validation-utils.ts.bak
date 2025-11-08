@@ -246,13 +246,9 @@ export class FormValidationUtils {
     }
 
     if (control.errors['pattern']) {
-      if (fieldName === 'cardNumber') {
-        errorMessages.push('Ingrese un número de tarjeta válido (13-19 dígitos)');
-      } else if (fieldName === 'cardCvv') {
-        errorMessages.push('Ingrese un CVV válido (3-4 dígitos)');
-      } else {
-        errorMessages.push(`El formato del campo ${controlName} no es válido`);
-      }
+      errorMessages.push(
+        `El campo ${controlName} no cumple la regla: ${control.errors['pattern'].requiredPattern}`
+      );
     }
 
     if (control.errors['noEspaciosEnBlanco']) {
