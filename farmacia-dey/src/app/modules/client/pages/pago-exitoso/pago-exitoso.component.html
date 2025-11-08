@@ -1,60 +1,157 @@
-<div class="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-  <div class="max-w-md w-full space-y-8">
+<div class="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+  <div class="max-w-lg w-full space-y-8">
+    
+    <!-- Encabezado de éxito -->
     <div class="text-center">
-      <div class="mx-auto h-24 w-24 text-green-500 mb-4">
+      <div class="mx-auto h-24 w-24 text-green-500 mb-4 animate-pulse">
         <mat-icon style="font-size: 96px; height: 96px; width: 96px;">check_circle</mat-icon>
       </div>
-      <h2 class="text-3xl font-extrabold text-gray-900 mb-2">
-        ¡Pago Exitoso!
-      </h2>
-      <p class="text-gray-600 mb-6">
-        Tu compra ha sido procesada correctamente
+      <h1 class="text-4xl font-bold text-gray-900 mb-2">
+        ¡Pago Exitoso! 🎉
+      </h1>
+      <p class="text-lg text-gray-600 mb-8">
+        Tu compra ha sido procesada y confirmada exitosamente
       </p>
+    </div>
+    
+    <!-- Información de la transacción -->
+    <div class="bg-white shadow-lg rounded-xl p-6 border border-green-100">
+      <h2 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+        <mat-icon class="mr-2 text-green-600">receipt_long</mat-icon>
+        Detalles de la Transacción
+      </h2>
       
-      <div class="bg-white shadow rounded-lg p-6 mb-6">
-        <div class="space-y-3">
-          <div class="flex justify-between">
-            <span class="text-gray-600">Compra #:</span>
-            <span class="font-semibold">{{compraId}}</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-gray-600">Estado:</span>
-            <span class="text-green-600 font-semibold">Pagado</span>
-          </div>
-          <div class="flex justify-between">
-            <span class="text-gray-600">Fecha:</span>
-            <span class="font-semibold">{{fechaActual | date:'short'}}</span>
-          </div>
+      <div class="space-y-4">
+        <!-- ID de Compra -->
+        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg" *ngIf="compraId > 0">
+          <span class="text-gray-600 font-medium">
+            <mat-icon class="text-sm mr-1">shopping_bag</mat-icon>
+            Compra #:
+          </span>
+          <span class="font-bold text-lg text-green-700">{{compraId}}</span>
+        </div>
+        
+        <!-- ID de Transacción -->
+        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg" *ngIf="transaccionId > 0">
+          <span class="text-gray-600 font-medium">
+            <mat-icon class="text-sm mr-1">confirmation_number</mat-icon>
+            Transacción #:
+          </span>
+          <span class="font-bold text-blue-700">{{transaccionId}}</span>
+        </div>
+        
+        <!-- Método de Pago -->
+        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg" *ngIf="metodoPago">
+          <span class="text-gray-600 font-medium">
+            <mat-icon class="text-sm mr-1">payment</mat-icon>
+            Método de Pago:
+          </span>
+          <span class="font-semibold text-purple-700">{{metodoPago}}</span>
+        </div>
+        
+        <!-- Monto -->
+        <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200" *ngIf="monto > 0">
+          <span class="text-green-700 font-medium">
+            <mat-icon class="text-sm mr-1">attach_money</mat-icon>
+            Total Pagado:
+          </span>
+          <span class="font-bold text-2xl text-green-800">S/ {{monto | number:'1.2-2'}}</span>
+        </div>
+        
+        <!-- Productos -->
+        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg" *ngIf="productosCount > 0">
+          <span class="text-gray-600 font-medium">
+            <mat-icon class="text-sm mr-1">inventory</mat-icon>
+            Productos:
+          </span>
+          <span class="font-semibold">{{productosCount}} artículo(s)</span>
+        </div>
+        
+        <!-- Estado -->
+        <div class="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
+          <span class="text-green-700 font-medium">
+            <mat-icon class="text-sm mr-1">verified</mat-icon>
+            Estado:
+          </span>
+          <span class="font-bold text-green-800 flex items-center">
+            <mat-icon class="text-sm mr-1">check</mat-icon>
+            PAGADO
+          </span>
+        </div>
+        
+        <!-- Fecha y Hora -->
+        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+          <span class="text-gray-600 font-medium">
+            <mat-icon class="text-sm mr-1">schedule</mat-icon>
+            Fecha y Hora:
+          </span>
+          <span class="font-semibold">{{fechaActual | date:'dd/MM/yyyy HH:mm'}}</span>
+        </div>
+        
+        <!-- Token QR (solo si existe) -->
+        <div class="flex justify-between items-center p-3 bg-blue-50 rounded-lg border border-blue-200" *ngIf="qrToken">
+          <span class="text-blue-700 font-medium">
+            <mat-icon class="text-sm mr-1">qr_code</mat-icon>
+            QR Escaneado:
+          </span>
+          <span class="font-mono text-xs text-blue-800">{{qrToken}}</span>
         </div>
       </div>
-
-      <div class="space-y-3">
-        <button 
-          mat-raised-button 
-          color="primary" 
-          class="w-full"
-          (click)="descargarBoleta()">
-          <mat-icon>download</mat-icon>
-          Descargar Boleta
-        </button>
-        
-        <button 
-          mat-button 
-          color="accent"
-          class="w-full"
-          (click)="verMisCompras()">
-          <mat-icon>shopping_bag</mat-icon>
-          Ver Mis Compras
-        </button>
-        
-        <button 
-          mat-button 
-          class="w-full"
-          (click)="continuarComprando()">
-          <mat-icon>shopping_cart</mat-icon>
-          Continuar Comprando
-        </button>
+    </div>
+    
+    <!-- Mensaje informativo -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div class="flex items-start">
+        <mat-icon class="text-blue-500 mr-3 mt-1">info</mat-icon>
+        <div>
+          <p class="text-blue-800 font-medium">¡Gracias por tu compra!</p>
+          <p class="text-blue-700 text-sm mt-1">
+            Recibirás un correo de confirmación con los detalles de tu pedido. 
+            Puedes descargar tu boleta electrónica usando el botón de abajo.
+          </p>
+        </div>
       </div>
     </div>
+    
+    <!-- Botones de acción -->
+    <div class="space-y-3">
+      <button 
+        mat-raised-button 
+        color="primary" 
+        class="w-full !py-3 !text-lg"
+        (click)="descargarBoleta()">
+        <mat-icon class="mr-2">download</mat-icon>
+        Descargar Boleta PDF
+      </button>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <button 
+          mat-raised-button 
+          color="accent"
+          class="w-full !py-2"
+          (click)="verMisCompras()">
+          <mat-icon class="mr-2">shopping_bag</mat-icon>
+          Mis Compras
+        </button>
+        
+        <button 
+          mat-stroked-button 
+          color="primary"
+          class="w-full !py-2"
+          (click)="continuarComprando()">
+          <mat-icon class="mr-2">shopping_cart</mat-icon>
+          Seguir Comprando
+        </button>
+      </div>
+      
+      <button 
+        mat-button 
+        class="w-full !text-gray-600"
+        (click)="volverInicio()">
+        <mat-icon class="mr-2">home</mat-icon>
+        Volver al Inicio
+      </button>
+    </div>
+    
   </div>
 </div>

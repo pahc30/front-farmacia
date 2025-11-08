@@ -56,7 +56,15 @@ export class MetodopagoService {
 
   obtenerTransaccionesPorCompra = (compraId: number): Observable<any> => {
     const path = this.pagoPath + `/compra/${compraId}`;
-    return this.http.get<any>(path).pipe(map((res) => res));
+    console.log('Servicio: Haciendo petición a:', path);
+    return this.http.get<any>(path).pipe(
+      map((res) => {
+        console.log('Servicio: Respuesta recibida para compra', compraId, ':', res);
+        console.log('Servicio: Tipo de respuesta:', typeof res);
+        console.log('Servicio: Es array?:', Array.isArray(res));
+        return res;
+      })
+    );
   }
 
   // Métodos para descarga de boletas PDF

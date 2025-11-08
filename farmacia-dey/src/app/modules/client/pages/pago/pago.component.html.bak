@@ -111,14 +111,6 @@
     </div>
   </div>
 
-  <!-- Botón de Pago Visa -->
-  <div *ngIf="esVisa()" class="text-center mt-6 mb-6">
-    <button mat-raised-button color="primary" class="px-8 py-3 text-lg" (click)="procesarPagoVisa()">
-      💳 Procesar Pago con Visa - S/.{{ total }}
-    </button>
-  </div>
-
-
   <!-- Simulación de QR para Yape/Plin -->
   <div *ngIf="mostrandoPago && esYapeOPlin()" class="mb-6 text-center bg-blue-50 p-6 rounded-lg border">
     <!-- Timer de cuenta regresiva -->
@@ -278,6 +270,4 @@
     </div>
   </div>
   </div>
-
-
 </div>

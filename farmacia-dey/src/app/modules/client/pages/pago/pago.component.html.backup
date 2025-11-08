@@ -1,0 +1,174 @@
+<div class="container max-w-4xl mx-auto p-6">
+  <div class="mb-6">
+    <h2 class="text-3xl font-bold text-gray-800">Procesar Pago</h2>
+    <p class="text-gray-600 mt-2">Complete el proceso de pago</p>
+  </div>
+
+  <!-- Resumen de compra -->
+  <div class="bg-gray-50 rounded-lg p-6 mb-6">
+    <h3 class="text-xl font-semibold mb-4">Resumen de Compra</h3>
+    <div class="flex justify-between items-center mb-2">
+      <span>Total a pagar:</span>
+      <span class="text-2xl font-bold text-green-600">S/.{{ total }}</span>
+    </div>
+    <div class="flex justify-between items-center">
+      <span>Productos:</span>
+      <span>{{ productos?.length || 0 }} artículos</span>
+    </div>
+  </div>
+
+  <!-- Métodos de pago -->
+  <div class="mb-6">
+    <h3 class="text-xl font-semibold mb-4">Seleccionar Método de Pago</h3>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div *ngFor="let metodo of metodos" 
+           class="border rounded-lg p-4 cursor-pointer transition-all"
+           [class.border-blue-500]="metodoPagoSeleccionado?.id === metodo.id"
+           [class.bg-blue-50]="metodoPagoSeleccionado?.id === metodo.id"
+           (click)="seleccionarMetodo(metodo)">
+        <div class="text-center">
+          <h4 class="font-medium">{{ metodo.tipo }}</h4>
+          <p class="text-sm text-gray-600">{{ metodo.descripcion }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario de pago Visa -->
+  <div *ngIf="esVisa()" class="mb-6">
+    <h3 class="text-xl font-semibold mb-4">Datos de Tarjeta</h3>
+    <div [formGroup]="form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <mat-form-field class="w-full">
+        <mat-label>Número de Tarjeta</mat-label>
+        <input matInput formControlName="cardNumber" placeholder="1234 5678 9012 3456">
+        <mat-error *ngIf="frmValidationUtils?.hasErrors('cardNumber')">
+          {{ frmValidationUtils.getErrorMessages('cardNumber', 'Número de tarjeta') }}
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field class="w-full">
+        <mat-label>CVV</mat-label>
+        <input matInput formControlName="cardCvv" placeholder="123">
+        <mat-error *ngIf="frmValidationUtils?.hasErrors('cardCvv')">
+          {{ frmValidationUtils.getErrorMessages('cardCvv', 'CVV') }}
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field class="w-full">
+        <mat-label>Nombres</mat-label>
+        <input matInput formControlName="cardNombre">
+        <mat-error *ngIf="frmValidationUtils?.hasErrors('cardNombre')">
+          {{ frmValidationUtils.getErrorMessages('cardNombre', 'Nombres') }}
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field class="w-full">
+        <mat-label>Apellidos</mat-label>
+        <input matInput formControlName="cardApellido">
+        <mat-error *ngIf="frmValidationUtils?.hasErrors('cardApellido')">
+          {{ frmValidationUtils.getErrorMessages('cardApellido', 'Apellidos') }}
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field class="w-full">
+        <mat-label>Mes de Expiración</mat-label>
+        <mat-select formControlName="cardExpMonth">
+          <mat-option *ngFor="let mes of [1,2,3,4,5,6,7,8,9,10,11,12]" [value]="mes">
+            {{ mes.toString().padStart(2, '0') }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field class="w-full">
+        <mat-label>Año de Expiración</mat-label>
+        <mat-select formControlName="cardExpYear">
+          <mat-option *ngFor="let year of [2024,2025,2026,2027,2028,2029,2030]" [value]="year">
+            {{ year }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <!-- Simulación de QR para Yape/Plin -->
+  <div *ngIf="mostrandoPago && esYapeOPlin()" class="mb-6 text-center bg-blue-50 p-6 rounded-lg border">
+    <!-- Timer de cuenta regresiva -->
+    <div *ngIf="timerActivo" class="mb-4 p-3 bg-orange-100 border border-orange-300 rounded-lg">
+      <div class="flex items-center justify-center space-x-2">
+        <mat-icon class="text-orange-600">timer</mat-icon>
+        <span class="text-orange-800 font-bold text-lg">{{ formatearTiempo() }}</span>
+        <span class="text-orange-600 text-sm">restante</span>
+      </div>
+      <p class="text-orange-700 text-sm mt-1">⚠️ Complete el pago antes de que termine el tiempo</p>
+    </div>
+    
+    <h3 class="text-xl font-semibold mb-4 text-blue-800">💳 Escanea el código QR</h3>
+    <div class="bg-white p-6 rounded border inline-block shadow-lg">
+      <img [src]="qrUrl" alt="Código QR para pago" class="w-64 h-64 border-2 border-gray-300">
+    </div>
+    <div class="mt-4">
+      <p class="text-lg font-medium text-blue-700">Escanea este código con tu app {{ metodoPagoSeleccionado?.tipo }}</p>
+      <p class="text-gray-600 mt-2">💰 Monto: <strong>S/.{{ total }}</strong></p>
+      <p class="text-gray-600">📱 Después de realizar el pago en tu app, haz click en "Confirmar Pago"</p>
+    </div>
+    
+    <!-- Indicador de espera -->
+    <div class="mt-6 p-4 bg-yellow-50 rounded border border-yellow-200">
+      <div class="flex items-center justify-center space-x-2">
+        <div class="animate-pulse w-3 h-3 bg-yellow-400 rounded-full"></div>
+        <span class="text-yellow-700 font-medium">Esperando confirmación del pago...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Simulación de formulario para Visa -->
+  <div *ngIf="mostrandoPago && esVisa()" class="mb-6 text-center bg-green-50 p-6 rounded-lg border">
+    <!-- Timer de cuenta regresiva -->
+    <div *ngIf="timerActivo" class="mb-4 p-3 bg-orange-100 border border-orange-300 rounded-lg">
+      <div class="flex items-center justify-center space-x-2">
+        <mat-icon class="text-orange-600">timer</mat-icon>
+        <span class="text-orange-800 font-bold text-lg">{{ formatearTiempo() }}</span>
+        <span class="text-orange-600 text-sm">restante</span>
+      </div>
+      <p class="text-orange-700 text-sm mt-1">⚠️ Complete el pago antes de que termine el tiempo</p>
+    </div>
+    
+    <h3 class="text-xl font-semibold mb-4 text-green-800">💳 Pago con Tarjeta Visa</h3>
+    <div class="p-4 bg-white rounded border shadow">
+      <p class="text-green-700 font-medium">✅ Datos de tarjeta validados correctamente</p>
+      <p class="text-gray-600 mt-2">💰 Monto: <strong>S/.{{ total }}</strong></p>
+      <p class="text-gray-600">Haz click en "Confirmar Pago" para procesar la transacción</p>
+    </div>
+  </div>
+
+  <!-- Botones de acción -->
+  <div class="flex justify-between items-center">
+    <button mat-button (click)="regresarCarrito()" class="!text-gray-600">
+      <mat-icon>arrow_back</mat-icon>
+      Regresar al Carrito
+    </button>
+
+    <div class="space-x-4">
+      <button *ngIf="!mostrandoPago && esYapeOPlin()" 
+              mat-raised-button 
+              color="primary" 
+              (click)="simularPagoYape()">
+        Pagar con {{ metodoPagoSeleccionado?.tipo }}
+      </button>
+
+      <button *ngIf="!mostrandoPago && esVisa()" 
+              mat-raised-button 
+              color="primary" 
+              (click)="procesarPagoVisa()">
+        Pagar con Tarjeta
+      </button>
+
+      <button *ngIf="mostrandoPago" 
+              mat-raised-button 
+              color="accent" 
+              (click)="confirmarPago()">
+        Confirmar Pago
+      </button>
+    </div>
+  </div>
+</div>

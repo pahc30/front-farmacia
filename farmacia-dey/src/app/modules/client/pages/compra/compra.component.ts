@@ -85,14 +85,25 @@ export class CompraComponent implements OnInit {
     this.cargandoTransacciones[compraId] = true;
     this.metodoPagoService.obtenerTransaccionesPorCompra(compraId).subscribe({
       next: (res) => {
-        console.log('Transacciones recibidas:', res);
+        console.log('=== DEBUG TRANSACCIONES ===');
+        console.log('CompraId solicitado:', compraId);
+        console.log('Respuesta completa:', res);
+        console.log('Tipo de respuesta:', typeof res);
+        console.log('Es array?:', Array.isArray(res));
+        console.log('Longitud:', res?.length);
+        console.log('JSON stringify:', JSON.stringify(res));
+        console.log('========================');
+        
         this.transacciones[compraId] = res || [];
         this.mostrandoTransacciones[compraId] = true;
         this.cargandoTransacciones[compraId] = false;
         
-        if (this.transacciones[compraId].length === 0) {
-          // MensajesService no define showMessageInfo; usar showMessageSuccess para mostrar información
-          this.mensaje.showMessageSuccess('Esta compra no tiene transacciones registradas');
+        if (!res || (Array.isArray(res) && res.length === 0)) {
+          console.warn('⚠️ SIN TRANSACCIONES: Compra', compraId, 'no tiene transacciones QR');
+          console.warn('Esto es normal si la compra fue pagada con efectivo/transferencia');
+          // No mostrar mensaje, es comportamiento normal
+        } else {
+          console.log('✅ TRANSACCIONES ENCONTRADAS:', res.length, 'para compra', compraId);
         }
       },
       error: (err) => {

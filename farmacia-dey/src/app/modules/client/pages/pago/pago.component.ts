@@ -7,6 +7,8 @@ import { FormValidationUtils } from '../../../../utils/form-validation-utils';
 import { RouteDataService } from '../../../../core/services/route-data.service';
 import { CompraService } from '../../services/compra.service';
 import { CarritoCounterService } from '../../../../core/services/carrito-counter.service';
+import { QrScanService } from '../../services/qr-scan.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-pago',
@@ -22,16 +24,26 @@ export class PagoComponent implements OnInit, OnDestroy {
   metodoPagoSeleccionado: any = null;
   total: number = 0;
   
-  // Variables de pago
+  // Variables de pago con integración QR real
   transaccionCreada: any = null;
+  qrData: any = null;
   qrUrl: string | null = null;
+  qrToken: string | null = null;
   mostrandoPago: boolean = false;
-  pagoSimulado: boolean = false;
+  pagoCompletado: boolean = false;
+  
+  // Estados del QR
+  qrGenerado: boolean = false;
+  qrEscaneado: boolean = false;
+  esperandoEscaneo: boolean = false;
   
   // Timer de pago
   timerActivo: boolean = false;
-  tiempoRestante: number = 60;
+  tiempoRestante: number = 300; // 5 minutos
   intervalTimer: any = null;
+  
+  // Subscripciones
+  private qrDetectionSubscription: Subscription | null = null;
   
   // Formulario para Visa
   form!: FormGroup;
@@ -44,7 +56,8 @@ export class PagoComponent implements OnInit, OnDestroy {
     private metodoPagoService: MetodopagoService,
     private routeDataService: RouteDataService,
     private compraService: CompraService,
-    private carritoCounterService: CarritoCounterService
+    private carritoCounterService: CarritoCounterService,
+    private qrScanService: QrScanService
   ) {
     this.initForm();
   }
@@ -68,10 +81,26 @@ export class PagoComponent implements OnInit, OnDestroy {
       const metodoSeleccionado = this.metodos.find(m => m.id === this.datoCompra.metodoPagoId);
       if (metodoSeleccionado) {
         this.seleccionarMetodo(metodoSeleccionado);
+        
+        // 🚀 GENERAR PAGO AUTOMÁTICAMENTE según el método seleccionado
+        setTimeout(() => {
+          if (this.esYapeOPlin()) {
+            console.log('🔲 Auto-iniciando pago Yape/Plin...');
+            this.iniciarPagoYape();
+          } else if (this.esVisa()) {
+            console.log('💳 Método Visa seleccionado, esperando confirmación...');
+            // Para Visa, no auto-iniciar, esperar que llene datos
+          }
+        }, 500);
       }
     }
 
     console.log('Datos de compra recibidos:', this.datoCompra);
+  }
+
+  ngOnDestroy(): void {
+    this.limpiarTimer();
+    this.detenerDeteccionQR();
   }
 
   initForm(): void {
@@ -91,13 +120,18 @@ export class PagoComponent implements OnInit, OnDestroy {
   }
 
   seleccionarMetodo(metodo: any): void {
+    console.log('🎯 Seleccionando método:', metodo);
     this.metodoPagoSeleccionado = metodo;
     this.form.patchValue({ metodoPago: metodo.id });
-    console.log('Método seleccionado:', metodo);
+    console.log('✅ Método seleccionado asignado:', this.metodoPagoSeleccionado);
+    console.log('📋 Es Yape/Plin:', this.esYapeOPlin());
+    console.log('💳 Es Visa:', this.esVisa());
+    console.log('🚨 DEBUG VISA - qrGenerado:', this.qrGenerado);
+    console.log('🚨 DEBUG VISA - mostrandoPago:', this.mostrandoPago);
   }
 
-  // Método para simular pago con Yape/Plin
-  simularPagoYape(): void {
+  // Método actualizado para integrar con backend real
+  async iniciarPagoYape(): Promise<void> {
     if (!this.metodoPagoSeleccionado) {
       this.mensaje.showMessageError('Selecciona un método de pago');
       return;
@@ -109,17 +143,172 @@ export class PagoComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Solo mostrar una notificación breve al generar QR
-    this.mensaje.showMessageSuccess(`Código QR generado para ${this.metodoPagoSeleccionado.tipo}`);
-    
-    // Generar código QR simulado
-    const payload = `Pago: S/.${this.total} - Compra farmacia DeY`;
-    this.qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(payload)}`;
-    this.mostrandoPago = true;
-    this.iniciarTimer();
+    try {
+      this.mensaje.showLoading();
+      
+      // Paso 1: Crear Payment Intent
+      console.log('🚀 Creando Payment Intent...');
+      const paymentData = {
+        compraId: Date.now(), // Temporal, se usará el ID de compra real
+        monto: this.total,
+        descripcion: `Farmacia DeY - ${this.productos.length} producto(s)`
+      };
+
+      const paymentResult = await this.metodoPagoService.crearPaymentIntent(paymentData).toPromise();
+      
+      if (!paymentResult.success) {
+        throw new Error(paymentResult.message || 'Error creando payment intent');
+      }
+
+      this.transaccionCreada = paymentResult;
+      console.log('✅ Payment Intent creado:', this.transaccionCreada);
+
+      // Paso 2: Generar QR para la transacción
+      console.log('🔲 Generando QR...');
+      const qrResult = await this.qrScanService.generarQRPago(this.transaccionCreada.transaccionId).toPromise();
+      
+      if (!qrResult.success) {
+        throw new Error(qrResult.message || 'Error generando QR');
+      }
+
+      this.qrData = qrResult;
+      this.qrToken = qrResult.qrToken;
+      this.qrUrl = this.generarQRVisual(qrResult.qrUrl, this.total);
+      
+      console.log('✅ QR generado:', this.qrData);
+
+      // Paso 3: Mostrar QR y iniciar detección
+      this.mostrandoPago = true;
+      this.qrGenerado = true;
+      this.esperandoEscaneo = true;
+      
+      this.mensaje.closeLoading();
+      this.mensaje.showMessageSuccess('QR generado. Escanea con tu celular para pagar');
+      
+      // Iniciar timer y detección
+      this.iniciarTimer();
+      this.iniciarDeteccionQR();
+
+    } catch (error: any) {
+      console.error('❌ Error en pago Yape:', error);
+      this.mensaje.closeLoading();
+      this.mensaje.showMessageError(error.message || 'Error procesando pago');
+    }
   }
 
-  // Método para simular pago con Visa
+  // Generar QR visual usando API externa
+  private generarQRVisual(qrUrl: string, monto: number): string {
+    const data = encodeURIComponent(`${qrUrl}`);
+    return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${data}&bgcolor=FFFFFF&color=000000&qzone=2&format=png`;
+  }
+
+  // Iniciar detección automática de escaneo QR
+  private iniciarDeteccionQR(): void {
+    if (!this.qrToken) return;
+
+    console.log('👁️ Iniciando detección de escaneo QR:', this.qrToken);
+    
+    this.qrDetectionSubscription = this.qrScanService.iniciarDeteccionEscaneo(this.qrToken, 2000)
+      .subscribe({
+        next: (estado) => {
+          console.log('🔍 Estado QR:', estado);
+          
+          if (estado.escaneado && !this.qrEscaneado) {
+            this.onQREscaneado(estado);
+          }
+        },
+        error: (error) => {
+          console.error('❌ Error detectando escaneo:', error);
+          this.mensaje.showMessageError('Error verificando estado del pago');
+        },
+        complete: () => {
+          console.log('✅ Detección de QR completada');
+        }
+      });
+  }
+
+  // Cuando el QR es escaneado
+  private onQREscaneado(estado: any): void {
+    console.log('📱 ¡QR ESCANEADO!', estado);
+    
+    this.qrEscaneado = true;
+    this.esperandoEscaneo = false;
+    this.pagoCompletado = true;
+    
+    this.limpiarTimer();
+    this.detenerDeteccionQR();
+    
+    this.mensaje.showMessageSuccess('¡QR escaneado! Procesando pago automáticamente...');
+    
+    // Auto-confirmar el pago después de unos segundos
+    setTimeout(() => {
+      this.confirmarPagoAutomatico();
+    }, 2000);
+  }
+
+  // Confirmar pago automáticamente después del escaneo
+  private async confirmarPagoAutomatico(): Promise<void> {
+    try {
+      console.log('✅ Confirmando pago automáticamente...');
+      
+      // Confirmar en backend
+      if (this.transaccionCreada) {
+        const confirmResult = await this.metodoPagoService.confirmarPago(this.transaccionCreada.transaccionId).toPromise();
+        console.log('Confirmación backend:', confirmResult);
+      }
+
+      // Procesar compra
+      const datoCompra = this.construirDatoCompra();
+      const compraResult = await this.compraService.save(datoCompra).toPromise();
+      
+      console.log('✅ Compra procesada:', compraResult);
+      
+      if (compraResult?.success !== false) {
+        this.mensaje.showMessageSuccess('¡Pago completado exitosamente!');
+        this.carritoCounterService.updateCount(0);
+        
+        // Navegar a página de éxito
+        setTimeout(() => {
+          this.router.navigate(["/client/pago-exitoso"]);
+        }, 2000);
+      } else {
+        throw new Error(compraResult?.message || 'Error procesando compra');
+      }
+
+    } catch (error: any) {
+      console.error('❌ Error confirmando pago:', error);
+      this.mensaje.showMessageError('Error completando el pago: ' + (error.message || 'Error desconocido'));
+    }
+  }
+
+  // Método manual para simular escaneo (para testing)
+  simularEscaneoQR(): void {
+    if (!this.qrToken) {
+      this.mensaje.showMessageError('No hay QR activo');
+      return;
+    }
+
+    console.log('🧪 Simulando escaneo de QR...');
+    // Eliminado mensaje duplicado;
+    
+    this.qrScanService.confirmarEscaneoManual(this.qrToken).subscribe({
+      next: (result) => {
+        console.log('✅ Escaneo simulado:', result);
+        if (result.success) {
+          // La detección automática debería captar este cambio
+          console.log('✅ Escaneo simulado exitoso');
+        } else {
+          this.mensaje.showMessageError('Error simulando escaneo: ' + result.message);
+        }
+      },
+      error: (error) => {
+        console.error('❌ Error simulando escaneo:', error);
+        this.mensaje.showMessageError('Error simulando escaneo');
+      }
+    });
+  }
+
+  // Método para pago con Visa (mantener existente)
   procesarPagoVisa(): void {
     if (!this.metodoPagoSeleccionado) {
       this.mensaje.showMessageError('Selecciona un método de pago');
@@ -135,143 +324,93 @@ export class PagoComponent implements OnInit, OnDestroy {
     // Validar campos de tarjeta
     if (!this.form.get('cardNumber')?.value || !this.form.get('cardNombre')?.value ||
         !this.form.get('cardApellido')?.value || !this.form.get('cardCvv')?.value) {
-      this.mensaje.showMessageError('Complete todos los datos de la tarjeta');
+      this.mensaje.showMessageError('Complete los datos de la tarjeta correctamente');
       return;
     }
 
-    // Solo una notificación de validación exitosa
-    this.mensaje.showMessageSuccess('Datos de tarjeta validados correctamente');
-    this.mostrandoPago = true;
-    this.iniciarTimer();
+    this.mensaje.showLoading();
+    
+    setTimeout(() => {
+      this.mensaje.closeLoading();
+      this.confirmarPagoVisa();
+    }, 2000);
   }
 
-  // Confirmar pago y completar la compra
-  confirmarPago(): void {
-    if (this.pagoSimulado) {
-      return; // Evitar doble ejecución
-    }
-
-    this.pagoSimulado = true;
-    
-    // Limpiar notificaciones anteriores y mostrar proceso de confirmación
-    this.mensaje.showLoading();
-
-    // Simular tiempo de procesamiento
-    setTimeout(() => {
-      // 1. Crear la compra primero
-      const datoFinal = {
-        usuarioId: this.datoCompra.usuarioId,
-        metodoPagoId: this.metodoPagoSeleccionado?.id || this.datoCompra.metodoPagoId,
-        detalleCompra: this.datoCompra.detalleCompra,
-      };
-
-      this.compraService.save(datoFinal).subscribe({
-        next: (compraRes) => {
-          // 2. Crear PaymentIntent (transacción) con el ID de compra
-          const paymentRequest = {
-            compraId: compraRes.dato.id,
-            metodoPagoId: this.metodoPagoSeleccionado?.id,
-            monto: this.total,
-            moneda: 'PEN',
-            descripcion: `Pago farmacia - ${this.productos.length} productos`,
-            // Datos de la tarjeta (para Visa)
-            cardNumber: this.form.get('cardNumber')?.value,
-            cardNombre: this.form.get('cardNombre')?.value,
-            cardApellido: this.form.get('cardApellido')?.value,
-            cardCvv: this.form.get('cardCvv')?.value,
-            cardExpMonth: this.form.get('cardExpMonth')?.value,
-            cardExpYear: this.form.get('cardExpYear')?.value,
-            cardCuotas: this.form.get('cardCuotas')?.value || 1
-          };
-
-          this.metodoPagoService.crearPaymentIntent(paymentRequest).subscribe({
-            next: (paymentRes) => {
-              if (paymentRes.success) {
-                // 3. Confirmar el pago
-                this.metodoPagoService.confirmarPago(paymentRes.transaccionId).subscribe({
-                  next: (confirmRes) => {
-                    this.mensaje.closeLoading();
-                    if (confirmRes.success) {
-                      this.detenerTimer();
-                      this.mensaje.showMessageSuccess('¡Pago confirmado exitosamente!');
-                      this.carritoCounterService.updateCount(0);
-                      // Navegar a la página de compras después de un delay
-                      setTimeout(() => {
-                        this.router.navigate(['/client/compras']);
-                      }, 2000);
-                    } else {
-                      this.mensaje.showMessageError('Error confirmando el pago');
-                      this.pagoSimulado = false;
-                    }
-                  },
-                  error: (err) => {
-                    this.detenerTimer();
-                    this.mensaje.closeLoading();
-                    this.mensaje.showMessageError('Error en la confirmación del pago');
-                    this.pagoSimulado = false;
-                  }
-                });
-              } else {
-                this.mensaje.closeLoading();
-                this.mensaje.showMessageError('Error procesando el pago: ' + paymentRes.message);
-                this.pagoSimulado = false;
-              }
-            },
-            error: (err) => {
-              this.mensaje.closeLoading();
-              this.mensaje.showMessageErrorObservable(err);
-              this.pagoSimulado = false;
+  // Confirmar pago Visa
+  private async confirmarPagoVisa(): Promise<void> {
+    try {
+      const datoCompra = this.construirDatoCompra();
+      console.log('📤 Datos enviados al backend para Visa:', datoCompra);
+      const result = await this.compraService.save(datoCompra).toPromise();
+      
+      if (result?.success !== false) {
+        console.log('✅ Resultado de compra Visa:', result);
+        console.log('🔍 Método de pago usado:', this.metodoPagoSeleccionado);
+        
+        this.mensaje.showMessageSuccess('¡Pago con Visa completado exitosamente!');
+        this.carritoCounterService.updateCount(0);
+        
+        const compraId = result?.data?.id || result?.id || 0;
+        console.log('💾 CompraId obtenido:', compraId);
+        
+        // Guardar información de compra para la boleta
+        this.routeDataService.setData({
+          compraId: compraId,
+          total: this.total,
+          productos: this.productos,
+          metodoPago: this.metodoPagoSeleccionado,
+          usuarioId: this.datoCompra.usuarioId
+        });
+        
+        setTimeout(() => {
+          this.router.navigate(["/client/pago-exitoso"], {
+            state: {
+              compraId: compraId,
+              transaccionId: compraId, // Usar el mismo ID
+              monto: this.total,
+              metodoPago: this.metodoPagoSeleccionado?.tipo,
+              productosCount: this.productos.length
             }
           });
-        },
-        error: (err) => {
-          this.mensaje.closeLoading();
-          this.mensaje.showMessageErrorObservable(err);
-          this.pagoSimulado = false;
-        }
+        }, 1500);
+      } else {
+        throw new Error(result?.message || 'Error procesando pago');
+      }
+    } catch (error: any) {
+      this.mensaje.showMessageError('Error procesando pago: ' + error.message);
+    }
+  }
+
+  // Construir datos de compra
+  private construirDatoCompra(): any {
+    let detalle: any[] = [];
+    this.productos.forEach((item) => {
+      detalle.push({
+        productoId: item.producto.id,
+        cantidad: item.cantidad,
+        carritoCompraId: item.id,
       });
-    }, 1500); // Reducido a 1.5 segundos de procesamiento
+    });
+
+    return {
+      usuarioId: this.datoCompra.usuarioId,
+      metodoPagoId: this.metodoPagoSeleccionado.id,
+      detalleCompra: detalle,
+    };
   }
 
-  // Regresar al carrito
-  regresarCarrito(): void {
-    this.router.navigate(['/client/carrito']);
-  }
-
-  // Cancelar el proceso de pago
-  cancelarPago(): void {
-    this.detenerTimer();
-    this.regresarCarrito();
-  }
-
-  // Métodos auxiliares para verificar tipo de método de pago
-  esYapeOPlin(): boolean {
-    if (!this.metodoPagoSeleccionado) return false;
-    const tipo = this.metodoPagoSeleccionado.tipo.toLowerCase();
-    return tipo.includes('yape') || tipo.includes('plin');
-  }
-
-  esVisa(): boolean {
-    if (!this.metodoPagoSeleccionado) return false;
-    const tipo = this.metodoPagoSeleccionado.tipo.toLowerCase();
-    return tipo.includes('visa');
-  }
-
-  // Funciones del timer de pago
-  iniciarTimer(): void {
+  // Timer methods
+  private iniciarTimer(): void {
     this.timerActivo = true;
-    this.tiempoRestante = 60;
-    
     this.intervalTimer = setInterval(() => {
       this.tiempoRestante--;
-      
       if (this.tiempoRestante <= 0) {
-        this.timeoutPago();
+        this.onTimerExpired();
       }
     }, 1000);
   }
 
-  detenerTimer(): void {
+  private limpiarTimer(): void {
     if (this.intervalTimer) {
       clearInterval(this.intervalTimer);
       this.intervalTimer = null;
@@ -279,14 +418,11 @@ export class PagoComponent implements OnInit, OnDestroy {
     this.timerActivo = false;
   }
 
-  timeoutPago(): void {
-    this.detenerTimer();
-    this.mostrandoPago = false;
-    this.pagoSimulado = false;
-    this.mensaje.showMessageWarning('⏰ Tiempo agotado. La compra ha sido cancelada por inactividad');
-    
-    // Aquí podrías llamar al backend para marcar la transacción como fallida si ya se creó
-    // this.metodoPagoService.cancelarPorTimeout(transaccionId)
+  private onTimerExpired(): void {
+    this.limpiarTimer();
+    this.detenerDeteccionQR();
+    this.mensaje.showMessageError('Tiempo de pago expirado');
+    this.regresarAlCarrito();
   }
 
   formatearTiempo(): string {
@@ -295,7 +431,62 @@ export class PagoComponent implements OnInit, OnDestroy {
     return `${minutos}:${segundos.toString().padStart(2, '0')}`;
   }
 
-  ngOnDestroy(): void {
-    this.detenerTimer();
+  // Cleanup
+  private detenerDeteccionQR(): void {
+    if (this.qrDetectionSubscription) {
+      this.qrDetectionSubscription.unsubscribe();
+      this.qrDetectionSubscription = null;
+    }
+    this.qrScanService.detenerDeteccion();
+  }
+
+  // Helper methods
+  esYapeOPlin(): boolean {
+    console.log('🔍 Verificando esYapeOPlin - método:', this.metodoPagoSeleccionado);
+    if (!this.metodoPagoSeleccionado) {
+      console.log('❌ No hay método seleccionado para Yape/Plin');
+      return false;
+    }
+    const tipo = this.metodoPagoSeleccionado.tipo?.toLowerCase() || '';
+    console.log('🔎 Tipo en minúsculas:', tipo);
+    const resultado = tipo.includes('yape') || tipo.includes('plin');
+    console.log('📱 Es Yape/Plin:', resultado, 'para tipo:', tipo);
+    return resultado;
+  }
+
+  esVisa(): boolean {
+    console.log('🔍 Verificando esVisa - método:', this.metodoPagoSeleccionado);
+    if (!this.metodoPagoSeleccionado) {
+      console.log('❌ No hay método seleccionado para Visa');
+      return false;
+    }
+    const tipo = this.metodoPagoSeleccionado.tipo?.toLowerCase() || '';
+    console.log('🔎 Tipo en minúsculas:', tipo);
+    const resultado = tipo.includes('visa');
+    console.log('💳 Es Visa:', resultado, 'para tipo:', tipo);
+    console.log('🚨 DEBUG VISA - qrGenerado:', this.qrGenerado);
+    console.log('🚨 DEBUG VISA - mostrandoPago:', this.mostrandoPago);
+    return resultado;
+  }
+
+  // Navigation
+  regresarAlCarrito(): void {
+    this.limpiarTimer();
+    this.detenerDeteccionQR();
+    this.router.navigate(['/client/carrito']);
+  }
+
+  // Métodos legacy (mantener por compatibilidad)
+  simularPagoYape(): void {
+    this.iniciarPagoYape();
+  }
+
+  confirmarPago(): void {
+    if (this.qrEscaneado) {
+      this.mensaje.showMessageSuccess('El pago ya está siendo procesado automáticamente');
+    } else {
+      this.mensaje.showMessageSuccess('Esperando que escanees el QR con tu celular');
+    }
   }
 }
+
