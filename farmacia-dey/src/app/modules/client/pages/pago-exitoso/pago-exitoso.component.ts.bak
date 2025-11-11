@@ -26,54 +26,43 @@ export class PagoExitosoComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    console.log('🎬 Iniciando PagoExitosoComponent');
+    // Obtener parámetros de la URL y estado del router
+    this.compraId = +this.route.snapshot.paramMap.get('compraId')! || 0;
     
-    // PRIORIDAD 1: localStorage (guardado sincrónicamente antes de navegar)
-    const pagoInfo = localStorage.getItem('ultimo_pago_exitoso');
-    if (pagoInfo) {
-      try {
+    // Obtener información adicional del state del router (si viene del pago)
+    const navigation = this.router.getCurrentNavigation();
+    if (navigation?.extras?.state) {
+      const state = navigation.extras.state as Record<string, any>;
+      console.log('📦 Estado recibido del router:', state);
+      this.compraId = state['compraId'] ?? this.compraId;
+      this.transaccionId = state['transaccionId'] ?? this.transaccionId;
+      this.monto = state['monto'] ?? this.monto;
+      this.metodoPago = state['metodoPago'] ?? this.metodoPago;
+      this.productosCount = state['productosCount'] ?? this.productosCount;
+      this.qrToken = state['qrToken'] ?? this.qrToken;
+    }
+    
+    // Si falta información, obtener de localStorage como fallback
+    if (!this.compraId || !this.transaccionId) {
+      const pagoInfo = localStorage.getItem('ultimo_pago_exitoso');
+      if (pagoInfo) {
         const info = JSON.parse(pagoInfo);
         console.log('💾 Datos recuperados de localStorage:', info);
-        this.compraId = info.compraId ?? 0;
-        this.transaccionId = info.transaccionId ?? 0;
-        this.monto = info.monto ?? 0;
-        this.metodoPago = info.metodoPago ?? '';
-        this.productosCount = info.productosCount ?? 0;
-        this.qrToken = info.qrToken ?? '';
+        this.compraId = info.compraId ?? this.compraId;
+        this.transaccionId = info.transaccionId ?? this.transaccionId;
+        this.monto = info.monto ?? this.monto;
+        this.metodoPago = info.metodoPago ?? this.metodoPago;
+        this.productosCount = info.productosCount ?? this.productosCount;
+        this.qrToken = info.qrToken ?? this.qrToken;
         
         // Limpiar localStorage después de usar
         localStorage.removeItem('ultimo_pago_exitoso');
-        
-        console.log('✅ Estado cargado desde localStorage');
-      } catch (e) {
-        console.error('❌ Error parseando localStorage:', e);
-      }
-    } else {
-      console.warn('⚠️ No se encontró localStorage, intentando con router state');
-      
-      // PRIORIDAD 2: Router state (como fallback)
-      const routerState = window.history.state;
-      console.log('📦 Estado completo del router:', routerState);
-      
-      if (routerState && Object.keys(routerState).length > 1) {
-        console.log('📦 Usando state del router');
-        this.compraId = routerState['compraId'] ?? 0;
-        this.transaccionId = routerState['transaccionId'] ?? 0;
-        this.monto = routerState['monto'] ?? 0;
-        this.metodoPago = routerState['metodoPago'] ?? '';
-        this.productosCount = routerState['productosCount'] ?? 0;
-        this.qrToken = routerState['qrToken'] ?? '';
+      } else {
+        console.warn('⚠️ No se encontró información en localStorage para ultimo_pago_exitoso');
       }
     }
     
-    // PRIORIDAD 3: Parámetros de URL (último fallback)
-    const compraIdParam = +this.route.snapshot.paramMap.get('compraId')!;
-    if (compraIdParam && this.compraId === 0) {
-      this.compraId = compraIdParam;
-      console.log('🔗 CompraId obtenido de URL:', compraIdParam);
-    }
-    
-    console.log('🎉 Pago Exitoso - Información final:', {
+    console.log('🎉 Pago Exitoso - Información:', {
       compraId: this.compraId,
       transaccionId: this.transaccionId,
       monto: this.monto,
@@ -84,7 +73,6 @@ export class PagoExitosoComponent implements OnInit {
 
   descargarBoleta(): void {
     console.log("🔍 Debug descarga:", { compraId: this.compraId, transaccionId: this.transaccionId });
-    
     if (!this.compraId && !this.transaccionId) {
       this.mensaje.showMessageError('No hay información de compra para descargar la boleta');
       return;
@@ -96,7 +84,7 @@ export class PagoExitosoComponent implements OnInit {
     const downloadObservable = this.compraId > 0 
       ? this.metodoPagoService.descargarBoletaPorCompra(this.compraId)
       : this.metodoPagoService.descargarBoletaPorTransaccion(this.transaccionId);
-    
+
     downloadObservable.subscribe({
       next: (response: any) => {
         const blob = response.body;

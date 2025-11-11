@@ -247,79 +247,37 @@ export class PagoComponent implements OnInit, OnDestroy {
   }
 
   // Confirmar pago automáticamente después del escaneo
-  // Confirmar pago automáticamente después del escaneo
-  // Confirmar pago automático (Yape/Plin)
   private async confirmarPagoAutomatico(): Promise<void> {
     try {
-      const datoCompra = this.construirDatoCompra();
-      console.log('📤 Datos enviados al backend para Yape/Plin:', datoCompra);
-      const result = await this.compraService.save(datoCompra).toPromise();
+      console.log('✅ Confirmando pago automáticamente...');
       
-      if (result?.success !== false) {
-        console.log('✅ Resultado de compra Yape/Plin:', result);
-        const compraId = result?.dato?.id || result?.data?.id || result?.id || 0;
-        console.log('💾 CompraId obtenido:', compraId);
-        
-        // Crear y confirmar transacción de pago
-        const paymentRequest = {
-          compraId: compraId,
-          monto: this.total,
-          metodoPagoId: this.metodoPagoSeleccionado?.id || 1,
-          descripcion: `Pago ${this.metodoPagoSeleccionado?.tipo || 'Yape/Plin'} - ${this.productos.length} productos`
-        };
-        
-        try {
-          const pagoIntent = await this.metodoPagoService.crearPaymentIntent(paymentRequest).toPromise();
-          console.log('💳 Transacción de pago creada:', pagoIntent);
-          
-          if (pagoIntent?.success && pagoIntent?.transaccionId) {
-            const confirmResult = await this.metodoPagoService.confirmarPago(pagoIntent.transaccionId).toPromise();
-            console.log('✅ Pago confirmado:', confirmResult);
-          }
-        } catch (pagoError) {
-          console.warn('⚠️ Error registrando transacción (compra ya creada):', pagoError);
-        }
-        
+      // Confirmar en backend
+      if (this.transaccionCreada) {
+        const confirmResult = await this.metodoPagoService.confirmarPago(this.transaccionCreada.transaccionId).toPromise();
+        console.log('Confirmación backend:', confirmResult);
+      }
+
+      // Procesar compra
+      const datoCompra = this.construirDatoCompra();
+      const compraResult = await this.compraService.save(datoCompra).toPromise();
+      
+      console.log('✅ Compra procesada:', compraResult);
+      
+      if (compraResult?.success !== false) {
         this.mensaje.showMessageSuccess('¡Pago completado exitosamente!');
         this.carritoCounterService.updateCount(0);
         
-        // IMPORTANTE: Guardar en localStorage ANTES de navegar
-        const pagoState = {
-          compraId: compraId,
-          transaccionId: 0,
-          monto: this.total,
-          metodoPago: this.metodoPagoSeleccionado?.tipo,
-          productosCount: this.productos.length
-        };
-        
-        console.log('💾 Guardando estado en localStorage:', pagoState);
-        try {
-          localStorage.setItem('ultimo_pago_exitoso', JSON.stringify(pagoState));
-          console.log('✅ Estado guardado correctamente');
-        } catch (storageError) {
-          console.error('❌ Error guardando en localStorage:', storageError);
-        }
-        
-        // Guardar información de compra para la boleta
-        this.routeDataService.setData({
-          compraId: compraId,
-          total: this.total,
-          productos: this.productos,
-          metodoPago: this.metodoPagoSeleccionado,
-          usuarioId: this.datoCompra.usuarioId
-        });
-        
-        // Navegar después de un pequeño delay
+        // Navegar a página de éxito
         setTimeout(() => {
-          this.router.navigate(["/client/pago-exitoso"], {
-            state: pagoState
-          });
-        }, 500);
+          this.router.navigate(["/client/pago-exitoso"]);
+        }, 2000);
       } else {
-        throw new Error(result?.message || 'Error procesando pago');
+        throw new Error(compraResult?.message || 'Error procesando compra');
       }
+
     } catch (error: any) {
-      this.mensaje.showMessageError('Error procesando pago: ' + error.message);
+      console.error('❌ Error confirmando pago:', error);
+      this.mensaje.showMessageError('Error completando el pago: ' + (error.message || 'Error desconocido'));
     }
   }
 
@@ -379,8 +337,6 @@ export class PagoComponent implements OnInit, OnDestroy {
   }
 
   // Confirmar pago Visa
-  // Confirmar pago Visa
-  // Confirmar pago Visa
   private async confirmarPagoVisa(): Promise<void> {
     try {
       const datoCompra = this.construirDatoCompra();
@@ -389,48 +345,13 @@ export class PagoComponent implements OnInit, OnDestroy {
       
       if (result?.success !== false) {
         console.log('✅ Resultado de compra Visa:', result);
-        const compraId = result?.dato?.id || result?.data?.id || result?.id || 0;
-        console.log('💾 CompraId obtenido:', compraId);
-        
-        // Crear y confirmar transacción de pago
-        const paymentRequest = {
-          compraId: compraId,
-          monto: this.total,
-          metodoPagoId: this.metodoPagoSeleccionado?.id || 2,
-          descripcion: `Pago Visa - ${this.productos.length} productos`
-        };
-        
-        try {
-          const pagoIntent = await this.metodoPagoService.crearPaymentIntent(paymentRequest).toPromise();
-          console.log('💳 Transacción de pago Visa creada:', pagoIntent);
-          
-          if (pagoIntent?.success && pagoIntent?.transaccionId) {
-            const confirmResult = await this.metodoPagoService.confirmarPago(pagoIntent.transaccionId).toPromise();
-            console.log('✅ Pago Visa confirmado:', confirmResult);
-          }
-        } catch (pagoError) {
-          console.warn('⚠️ Error registrando transacción Visa (compra ya creada):', pagoError);
-        }
+        console.log('🔍 Método de pago usado:', this.metodoPagoSeleccionado);
         
         this.mensaje.showMessageSuccess('¡Pago con Visa completado exitosamente!');
         this.carritoCounterService.updateCount(0);
         
-        // IMPORTANTE: Guardar en localStorage ANTES de navegar
-        const pagoState = {
-          compraId: compraId,
-          transaccionId: 0,
-          monto: this.total,
-          metodoPago: this.metodoPagoSeleccionado?.tipo,
-          productosCount: this.productos.length
-        };
-        
-        console.log('💾 Guardando estado en localStorage:', pagoState);
-        try {
-          localStorage.setItem('ultimo_pago_exitoso', JSON.stringify(pagoState));
-          console.log('✅ Estado guardado correctamente');
-        } catch (storageError) {
-          console.error('❌ Error guardando en localStorage:', storageError);
-        }
+        const compraId = result?.data?.id || result?.id || 0;
+        console.log('💾 CompraId obtenido:', compraId);
         
         // Guardar información de compra para la boleta
         this.routeDataService.setData({
@@ -441,12 +362,25 @@ export class PagoComponent implements OnInit, OnDestroy {
           usuarioId: this.datoCompra.usuarioId
         });
         
-        // Navegar después de un pequeño delay
         setTimeout(() => {
+          const pagoState = {
+            compraId: compraId,
+            transaccionId: 0, // Visa no usa transacciones
+            monto: this.total,
+            metodoPago: this.metodoPagoSeleccionado?.tipo,
+            productosCount: this.productos.length
+          };
+
+          try {
+            localStorage.setItem('ultimo_pago_exitoso', JSON.stringify(pagoState));
+          } catch (storageError) {
+            console.warn('No se pudo guardar estado de pago en localStorage:', storageError);
+          }
+
           this.router.navigate(["/client/pago-exitoso"], {
             state: pagoState
           });
-        }, 500);
+        }, 1500);
       } else {
         throw new Error(result?.message || 'Error procesando pago');
       }
