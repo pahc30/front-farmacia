@@ -32,28 +32,33 @@ export class PagoExitosoComponent implements OnInit {
     // Obtener información adicional del state del router (si viene del pago)
     const navigation = this.router.getCurrentNavigation();
     if (navigation?.extras?.state) {
-      const state = navigation.extras.state;
-      this.transaccionId = state['transaccionId'] || 0;
-      this.monto = state['monto'] || 0;
-      this.metodoPago = state['metodoPago'] || '';
-      this.productosCount = state['productosCount'] || 0;
-      this.qrToken = state['qrToken'] || '';
+      const state = navigation.extras.state as Record<string, any>;
+      console.log('📦 Estado recibido del router:', state);
+      this.compraId = state['compraId'] ?? this.compraId;
+      this.transaccionId = state['transaccionId'] ?? this.transaccionId;
+      this.monto = state['monto'] ?? this.monto;
+      this.metodoPago = state['metodoPago'] ?? this.metodoPago;
+      this.productosCount = state['productosCount'] ?? this.productosCount;
+      this.qrToken = state['qrToken'] ?? this.qrToken;
     }
     
-    // Si no hay información en el state, obtener de localStorage como fallback
-    if (!this.transaccionId) {
+    // Si falta información, obtener de localStorage como fallback
+    if (!this.compraId || !this.transaccionId) {
       const pagoInfo = localStorage.getItem('ultimo_pago_exitoso');
       if (pagoInfo) {
         const info = JSON.parse(pagoInfo);
-        this.transaccionId = info.transaccionId || 0;
-        this.monto = info.monto || 0;
-        this.metodoPago = info.metodoPago || '';
-        this.productosCount = info.productosCount || 0;
-        this.qrToken = info.qrToken || '';
-        this.compraId = info.compraId || this.compraId;
+        console.log('💾 Datos recuperados de localStorage:', info);
+        this.compraId = info.compraId ?? this.compraId;
+        this.transaccionId = info.transaccionId ?? this.transaccionId;
+        this.monto = info.monto ?? this.monto;
+        this.metodoPago = info.metodoPago ?? this.metodoPago;
+        this.productosCount = info.productosCount ?? this.productosCount;
+        this.qrToken = info.qrToken ?? this.qrToken;
         
         // Limpiar localStorage después de usar
         localStorage.removeItem('ultimo_pago_exitoso');
+      } else {
+        console.warn('⚠️ No se encontró información en localStorage para ultimo_pago_exitoso');
       }
     }
     

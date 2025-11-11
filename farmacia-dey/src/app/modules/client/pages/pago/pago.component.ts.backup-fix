@@ -126,6 +126,8 @@ export class PagoComponent implements OnInit, OnDestroy {
     console.log('✅ Método seleccionado asignado:', this.metodoPagoSeleccionado);
     console.log('📋 Es Yape/Plin:', this.esYapeOPlin());
     console.log('💳 Es Visa:', this.esVisa());
+    console.log('🚨 DEBUG VISA - qrGenerado:', this.qrGenerado);
+    console.log('🚨 DEBUG VISA - mostrandoPago:', this.mostrandoPago);
   }
 
   // Método actualizado para integrar con backend real
@@ -327,24 +329,50 @@ export class PagoComponent implements OnInit, OnDestroy {
     }
 
     this.mensaje.showLoading();
-    this.mensaje.showMessageSuccess('Procesando pago con tarjeta...');
     
     setTimeout(() => {
       this.mensaje.closeLoading();
       this.confirmarPagoVisa();
-    }, 4000);
+    }, 2000);
   }
 
   // Confirmar pago Visa
   private async confirmarPagoVisa(): Promise<void> {
     try {
       const datoCompra = this.construirDatoCompra();
+      console.log('📤 Datos enviados al backend para Visa:', datoCompra);
       const result = await this.compraService.save(datoCompra).toPromise();
       
       if (result?.success !== false) {
-        this.mensaje.showMessageSuccess('¡Pago con tarjeta completado!');
+        console.log('✅ Resultado de compra Visa:', result);
+        console.log('🔍 Método de pago usado:', this.metodoPagoSeleccionado);
+        
+        this.mensaje.showMessageSuccess('¡Pago con Visa completado exitosamente!');
         this.carritoCounterService.updateCount(0);
-        this.router.navigate(["/client/pago-exitoso"]);
+        
+        const compraId = result?.data?.id || result?.id || 0;
+        console.log('💾 CompraId obtenido:', compraId);
+        
+        // Guardar información de compra para la boleta
+        this.routeDataService.setData({
+          compraId: compraId,
+          total: this.total,
+          productos: this.productos,
+          metodoPago: this.metodoPagoSeleccionado,
+          usuarioId: this.datoCompra.usuarioId
+        });
+        
+        setTimeout(() => {
+          this.router.navigate(["/client/pago-exitoso"], {
+            state: {
+              compraId: compraId,
+              transaccionId: compraId, // Usar el mismo ID
+              monto: this.total,
+              metodoPago: this.metodoPagoSeleccionado?.tipo,
+              productosCount: this.productos.length
+            }
+          });
+        }, 1500);
       } else {
         throw new Error(result?.message || 'Error procesando pago');
       }
@@ -436,6 +464,8 @@ export class PagoComponent implements OnInit, OnDestroy {
     console.log('🔎 Tipo en minúsculas:', tipo);
     const resultado = tipo.includes('visa');
     console.log('💳 Es Visa:', resultado, 'para tipo:', tipo);
+    console.log('🚨 DEBUG VISA - qrGenerado:', this.qrGenerado);
+    console.log('🚨 DEBUG VISA - mostrandoPago:', this.mostrandoPago);
     return resultado;
   }
 

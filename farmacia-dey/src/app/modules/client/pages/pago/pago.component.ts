@@ -363,14 +363,22 @@ export class PagoComponent implements OnInit, OnDestroy {
         });
         
         setTimeout(() => {
+          const pagoState = {
+            compraId: compraId,
+            transaccionId: 0, // Visa no usa transacciones
+            monto: this.total,
+            metodoPago: this.metodoPagoSeleccionado?.tipo,
+            productosCount: this.productos.length
+          };
+
+          try {
+            localStorage.setItem('ultimo_pago_exitoso', JSON.stringify(pagoState));
+          } catch (storageError) {
+            console.warn('No se pudo guardar estado de pago en localStorage:', storageError);
+          }
+
           this.router.navigate(["/client/pago-exitoso"], {
-            state: {
-              compraId: compraId,
-              transaccionId: compraId, // Usar el mismo ID
-              monto: this.total,
-              metodoPago: this.metodoPagoSeleccionado?.tipo,
-              productosCount: this.productos.length
-            }
+            state: pagoState
           });
         }, 1500);
       } else {
