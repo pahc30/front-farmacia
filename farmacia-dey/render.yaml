@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: farmaciadey
+    env: static
+    buildCommand: npm install && npm run build -- --configuration production
+    staticPublishPath: ./dist/farmacia-dey/browser
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
