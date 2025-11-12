@@ -2,12 +2,14 @@ const express = require('express');
 const path = require('path');
 const app = express();
 
+const distPath = path.join(__dirname, 'dist/farmacia-dey/browser');
+
 // Servir archivos estáticos
-app.use(express.static(path.join(__dirname, 'dist/farmacia-dey/browser')));
+app.use(express.static(distPath));
 
 // Todas las rutas devuelven index.html (para Angular routing)
-app.get('*', function(req, res) {
-  res.sendFile(path.join(__dirname, 'dist/farmacia-dey/browser/index.html'));
+app.use((req, res) => {
+  res.sendFile(path.join(distPath, 'index.html'));
 });
 
 // Puerto dinámico de Render o 8080 por defecto
