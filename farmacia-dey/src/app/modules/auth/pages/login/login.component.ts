@@ -61,25 +61,24 @@ export class LoginComponent implements OnInit {
         if(res?.estado == 0){
           this.mensaje.showMessageError(res?.mensaje);
         }else{
-          // Guardar datos del auth service
-          localStorage.setItem('user', JSON.stringify(res?.dato?.user));
+          // 🔐 SEGURIDAD MEJORADA: Solo guardar JWT Token
           localStorage.setItem('jwtToken', res?.dato?.accessToken);
-          localStorage.setItem('username', username);
 
           // Buscar el usuario en el servicio de usuarios para obtener el ID correcto
+          // Solo guardamos el ID para compatibilidad con el sistema de compras
           this.usuarioService.findByUsername(username).subscribe({
             next: (usuarioRes) => {
               if(usuarioRes?.estado == 1 && usuarioRes?.dato) {
-                // Guardar el ID del servicio de usuarios para las compras
+                // Solo guardar el ID para las compras, el resto se extrae del JWT
                 localStorage.setItem('usuarioServiceId', usuarioRes.dato.id.toString());
-                console.log('Usuario encontrado en servicio usuarios:', usuarioRes.dato);
+                console.log('Usuario encontrado - ID guardado para compras');
               } else {
                 console.warn('Usuario no encontrado en servicio usuarios');
                 // Usar el ID del auth como fallback
                 localStorage.setItem('usuarioServiceId', res?.dato?.user?.id.toString());
               }
 
-              // Redirigir según el rol
+              // Redirigir según el rol extraído del JWT
               const rol = res?.dato?.user?.rol;
               if(rol && rol.toUpperCase() == 'ADMINISTRADOR'){
                 this.router.navigate(['admin/dashboard']);

@@ -12,23 +12,71 @@ export class AuthJWTService {
   }
 
   getToken(): string | null {
-    return  localStorage.getItem('jwtToken') ;
+    return localStorage.getItem('jwtToken');
+  }
+
+  /**
+   * Decodifica el payload del JWT de forma segura
+   */
+  private decodeJWTPayload(): any {
+    const token = this.getToken();
+    if (!token) return null;
+
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) return null;
+
+      const payload = parts[1];
+      const decoded = atob(payload);
+      return JSON.parse(decoded);
+    } catch (error) {
+      console.error('Error decodificando JWT:', error);
+      return null;
+    }
   }
 
   getUserRole(): string | null {
-    return  localStorage.getItem('role') ;
+    const payload = this.decodeJWTPayload();
+    return payload?.rol || null;
   }
 
   isLogged(): boolean {
-    return this.getUsername() != null && this.getToken() != null;
+    const token = this.getToken();
+    if (!token) return false;
+
+    const payload = this.decodeJWTPayload();
+    if (!payload) return false;
+
+    // Verificar si el token no ha expirado
+    const now = Math.floor(Date.now() / 1000);
+    return payload.exp > now;
   }
 
   getUsername(): string | null {
-    return  localStorage.getItem('username') ;
+    const payload = this.decodeJWTPayload();
+    return payload?.sub || null;
+  }
+
+  getUserId(): number | null {
+    const payload = this.decodeJWTPayload();
+    if (payload?.userId) {
+      return payload.userId;
+    }
+    
+    // Fallback al localStorage para compatibilidad
+    const usuarioServiceId = localStorage.getItem('usuarioServiceId');
+    return usuarioServiceId ? parseInt(usuarioServiceId) : null;
   }
 
   getInfoUsuario(): any {
-    return JSON.parse(localStorage.getItem('user') || 'null');
+    const payload = this.decodeJWTPayload();
+    if (!payload) return null;
+
+    return {
+      username: payload.sub,
+      rol: payload.rol,
+      id: this.getUserId()
+    };
   }
 
   getNotariaId(): any{
@@ -43,13 +91,15 @@ export class AuthJWTService {
   }
 
   logout(): void {
-      localStorage.removeItem('jwtToken');
-      localStorage.removeItem('role');
-      localStorage.removeItem('username');
-      localStorage.removeItem('userId');
-      localStorage.removeItem('session');
-      localStorage.clear();
-
+    // Solo limpiar datos de autenticación, mantener otros datos del navegador
+    localStorage.removeItem('jwtToken');
+    localStorage.removeItem('usuarioServiceId'); // Solo mantener este para compatibilidad
+    // Remover datos inseguros que ya no deberían existir
+    localStorage.removeItem('user');
+    localStorage.removeItem('username'); 
+    localStorage.removeItem('role');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('session');
 
     this.router.navigate(['auth/login']);
   }
