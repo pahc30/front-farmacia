@@ -68,6 +68,31 @@ export class AuthJWTService {
     return usuarioServiceId ? parseInt(usuarioServiceId) : null;
   }
 
+  getNombres(): string | null {
+    const payload = this.decodeJWTPayload();
+    return payload?.nombres || null;
+  }
+
+  getApellidos(): string | null {
+    const payload = this.decodeJWTPayload();
+    return payload?.apellidos || null;
+  }
+
+  getNombreCompleto(): string {
+    const nombres = this.getNombres();
+    const apellidos = this.getApellidos();
+    
+    if (nombres && apellidos) {
+      return `${nombres} ${apellidos}`;
+    } else if (nombres) {
+      return nombres;
+    } else if (apellidos) {
+      return apellidos;
+    } else {
+      return this.getUsername() || 'Usuario';
+    }
+  }
+
   getInfoUsuario(): any {
     const payload = this.decodeJWTPayload();
     if (!payload) return null;
@@ -75,7 +100,10 @@ export class AuthJWTService {
     return {
       username: payload.sub,
       rol: payload.rol,
-      id: this.getUserId()
+      id: this.getUserId(),
+      nombres: payload.nombres,
+      apellidos: payload.apellidos,
+      nombreCompleto: this.getNombreCompleto()
     };
   }
 
