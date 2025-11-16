@@ -13,7 +13,7 @@ export class UsuarioService {
   constructor(private http: HttpClient) { }
 
   save = (dato: any): Observable<any> => {
-    const path = this.basePath + `/api/usuarios/save`;
+    const path = this.basePath + `/save`;
     return this.http.post<any>(path, dato).pipe(map((res) => res));
   }
 
@@ -37,7 +37,7 @@ export class UsuarioService {
       switchMap((authRes) => {
         // Si auth fue exitoso, crear en usuario_schema
         if (authRes.estado === 1) {
-          const usuarioPath = this.basePath + `/api/usuarios/save`;
+          const usuarioPath = this.basePath + `/save`;
           return this.http.post<any>(usuarioPath, dato).pipe(
             map((usuarioRes) => {
               // Retornar respuesta combinada
@@ -67,27 +67,27 @@ export class UsuarioService {
   }
 
   update = (dato: any, id: any): Observable<any> => {
-    const path = this.basePath + `/api/usuarios/update/${id}`;
+    const path = this.basePath + `/update/${id}`;
     return this.http.post<any>(path, dato).pipe(map((res) => res));
   }
 
   delete = (id: any): Observable<any> => {
-    const path = this.basePath + `/api/usuarios/delete/${id}`;
+    const path = this.basePath + `/delete/${id}`;
     return this.http.post<any>(path, null).pipe(map((res) => res));
   }
 
   find = (id: any): Observable<any> => {
-    const path = this.basePath + `/api/usuarios/find/${id}`;
+    const path = this.basePath + `/find/${id}`;
     return this.http.post<any>(path, null).pipe(map((res) => res));
   }
 
   list = (): Observable<any> => {
-    const path = this.basePath + `/api/usuarios/list`;
+    const path = this.basePath + `/list`;
     return this.http.post<any>(path, null).pipe(map((res) => res));
   }
 
   findByUsername = (username: string): Observable<any> => {
-    const path = this.basePath + `/api/usuarios/findByUsername/${username}`;
+    const path = this.basePath + `/findByUsername/${username}`;
     return this.http.post<any>(path, null).pipe(map((res) => res));
   }
 

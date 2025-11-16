@@ -12,12 +12,12 @@ export class CompraService {
   constructor(private http: HttpClient) { }
 
   save = (dato: any): Observable<any> => {
-    const path = this.basePath + `/api/compra/save`;
+    const path = this.basePath + `/save`;
     return this.http.post<any>(path, dato).pipe(map((res) => res));
   }
 
   list = (idUser:any): Observable<any> => {
-    const path = this.basePath + `/api/compra/list/${idUser}`;
+    const path = this.basePath + `/list/${idUser}`;
     return this.http.post<any>(path, null).pipe(map((res) => res));
   }
 

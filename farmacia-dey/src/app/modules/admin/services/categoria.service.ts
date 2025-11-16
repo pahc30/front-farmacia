@@ -7,32 +7,32 @@ import { environment } from '../../../../environments/environment';
   providedIn: 'root',
 })
 export class CategoriaService {
-  private basePath = environment.baseUrlBackend + '/producto';
+  private basePath = environment.baseUrlBackend + '/categoria';
 
   constructor(private http: HttpClient) { }
 
   save = (dato: any): Observable<any> => {
-    const path = this.basePath + `/api/categoria/save`;
+    const path = this.basePath + `/save`;
     return this.http.post<any>(path, dato).pipe(map((res) => res));
   }
 
   update = (dato: any, id: any): Observable<any> => {
-    const path = this.basePath + `/api/categoria/update/${id}`;
+    const path = this.basePath + `/update/${id}`;
     return this.http.post<any>(path, dato).pipe(map((res) => res));
   }
 
   delete = (id: any): Observable<any> => {
-    const path = this.basePath + `/api/categoria/delete/${id}`;
+    const path = this.basePath + `/delete/${id}`;
     return this.http.post<any>(path, null).pipe(map((res) => res));
   }
 
   find = (id: any): Observable<any> => {
-    const path = this.basePath + `/api/categoria/find/${id}`;
+    const path = this.basePath + `/find/${id}`;
     return this.http.post<any>(path, null).pipe(map((res) => res));
   }
 
   list = (): Observable<any> => {
-    const path = this.basePath + `/api/categoria/list`;
+    const path = this.basePath + `/list`;
     return this.http.post<any>(path, null).pipe(map((res) => res));
   }
 
