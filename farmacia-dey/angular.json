@@ -63,7 +63,7 @@
               ],
               "fileReplacements": [
                 {
-                  "replace": "src/environments/environment.development.ts",
+                  "replace": "src/environments/environment.ts",
                   "with": "src/environments/environment.ts"
                 }
               ],
@@ -76,7 +76,7 @@
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",
-                  "with": "src/environments/environment.development.ts"
+                  "with": "src/environments/environment.prod.ts"
                 }
               ]
             }
@@ -126,3 +126,4 @@
     "analytics": false
   }
 }
+
