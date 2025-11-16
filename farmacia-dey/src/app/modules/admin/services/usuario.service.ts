@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+﻿import { Injectable } from '@angular/core';
 import { Observable, map, switchMap } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
@@ -13,14 +13,14 @@ export class UsuarioService {
   constructor(private http: HttpClient) { }
 
   save = (dato: any): Observable<any> => {
-    const path = this.basePath + `/save`;
+    const path = this.basePath + `/api/usuarios/save`;
     return this.http.post<any>(path, dato).pipe(map((res) => res));
   }
 
   // Nuevo método que crea usuario con credenciales de login
   saveWithAuth = (dato: any): Observable<any> => {
     // Primero registrar en auth_schema (para login)
-    const authPath = this.authBasePath + `/register`;
+    const authPath = this.authBasePath + `/api/auth/register`;
     const authData = {
       username: dato.username,
       password: dato.password,
@@ -32,12 +32,12 @@ export class UsuarioService {
       direccion: dato.direccion,
       rol: dato.rol
     };
-    
+
     return this.http.post<any>(authPath, authData).pipe(
       switchMap((authRes) => {
         // Si auth fue exitoso, crear en usuario_schema
         if (authRes.estado === 1) {
-          const usuarioPath = this.basePath + `/save`;
+          const usuarioPath = this.basePath + `/api/usuarios/save`;
           return this.http.post<any>(usuarioPath, dato).pipe(
             map((usuarioRes) => {
               // Retornar respuesta combinada
@@ -67,27 +67,27 @@ export class UsuarioService {
   }
 
   update = (dato: any, id: any): Observable<any> => {
-    const path = this.basePath + `/update/${id}`;
+    const path = this.basePath + `/api/usuarios/update/${id}`;
     return this.http.post<any>(path, dato).pipe(map((res) => res));
   }
 
   delete = (id: any): Observable<any> => {
-    const path = this.basePath + `/delete/${id}`;
+    const path = this.basePath + `/api/usuarios/delete/${id}`;
     return this.http.post<any>(path, null).pipe(map((res) => res));
   }
 
   find = (id: any): Observable<any> => {
-    const path = this.basePath + `/find/${id}`;
+    const path = this.basePath + `/api/usuarios/find/${id}`;
     return this.http.post<any>(path, null).pipe(map((res) => res));
   }
 
   list = (): Observable<any> => {
-    const path = this.basePath + `/list`;
+    const path = this.basePath + `/api/usuarios/list`;
     return this.http.post<any>(path, null).pipe(map((res) => res));
   }
 
   findByUsername = (username: string): Observable<any> => {
-    const path = this.basePath + `/findByUsername/${username}`;
+    const path = this.basePath + `/api/usuarios/findByUsername/${username}`;
     return this.http.post<any>(path, null).pipe(map((res) => res));
   }
 

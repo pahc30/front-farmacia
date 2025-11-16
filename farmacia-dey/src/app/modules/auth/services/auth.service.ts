@@ -12,12 +12,12 @@ export class AuthService {
   constructor(private http: HttpClient) {}
 
   login(dato: any): Observable<any> {
-    const path = this.basePath + `/login`;
+    const path = this.basePath + `/api/auth/login`;
     return this.http.post<any>(path, dato).pipe(map((res) => res));
   }
 
   register(dato: any): Observable<any> {
-    const path = this.basePath + `/register`;
+    const path = this.basePath + `/api/auth/register`;
     return this.http.post<any>(path, dato).pipe(map((res) => res));
   }
 

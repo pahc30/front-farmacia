@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+﻿import { Injectable } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
@@ -12,12 +12,12 @@ export class CompraService {
   constructor(private http: HttpClient) { }
 
   save = (dato: any): Observable<any> => {
-    const path = this.basePath + `/save`;
+    const path = this.basePath + `/api/compra/save`;
     return this.http.post<any>(path, dato).pipe(map((res) => res));
   }
 
   list = (idUser:any): Observable<any> => {
-    const path = this.basePath + `/list/${idUser}`;
+    const path = this.basePath + `/api/compra/list/${idUser}`;
     return this.http.post<any>(path, null).pipe(map((res) => res));
   }
 
