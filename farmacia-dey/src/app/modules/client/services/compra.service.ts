@@ -7,17 +7,17 @@ import { environment } from '../../../../environments/environment';
   providedIn: 'root',
 })
 export class CompraService {
-  private basePath = environment.baseUrlBackend + '/compra/api';
+  private basePath = environment.baseUrlBackend + '/compra';
 
   constructor(private http: HttpClient) { }
 
   save = (dato: any): Observable<any> => {
-    const path = this.basePath + `/compra/save`;
+    const path = this.basePath + `/api/compra/save`;
     return this.http.post<any>(path, dato).pipe(map((res) => res));
   }
 
   list = (idUser:any): Observable<any> => {
-    const path = this.basePath + `/compra/list/${idUser}`;
+    const path = this.basePath + `/api/compra/list/${idUser}`;
     return this.http.post<any>(path, null).pipe(map((res) => res));
   }
 

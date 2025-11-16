@@ -7,22 +7,22 @@ import { environment } from '../../../../environments/environment';
   providedIn: 'root',
 })
 export class CarritoService {
-  private basePath = environment.baseUrlBackend + '/compra/api';
+  private basePath = environment.baseUrlBackend + '/compra';
 
   constructor(private http: HttpClient) { }
 
   save = (dato: any): Observable<any> => {
-    const path = this.basePath + `/carrito/save`;
+    const path = this.basePath + `/api/carrito/save`;
     return this.http.post<any>(path, dato).pipe(map((res) => res));
   }
 
   delete = (id: any): Observable<any> => {
-    const path = this.basePath + `/carrito/delete/${id}`;
+    const path = this.basePath + `/api/carrito/delete/${id}`;
     return this.http.post<any>(path, null).pipe(map((res) => res));
   }
 
   list = (idUser:any): Observable<any> => {
-    const path = this.basePath + `/carrito/list/${idUser}`;
+    const path = this.basePath + `/api/carrito/list/${idUser}`;
     return this.http.post<any>(path, null).pipe(map((res) => res));
   }
 

@@ -7,17 +7,17 @@ import { environment } from '../../../../environments/environment';
   providedIn: 'root',
 })
 export class AuthService {
-  private basePath = environment.baseUrlBackend + '/auth/api';
+  private basePath = environment.baseUrlBackend + '/auth';
 
   constructor(private http: HttpClient) {}
 
   login(dato: any): Observable<any> {
-    const path = this.basePath + `/auth/login`;
+    const path = this.basePath + `/login`;
     return this.http.post<any>(path, dato).pipe(map((res) => res));
   }
 
   register(dato: any): Observable<any> {
-    const path = this.basePath + `/auth/register`;
+    const path = this.basePath + `/register`;
     return this.http.post<any>(path, dato).pipe(map((res) => res));
   }
 

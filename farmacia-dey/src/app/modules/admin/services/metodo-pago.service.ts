@@ -7,34 +7,34 @@ import { environment } from '../../../../environments/environment';
   providedIn: 'root',
 })
 export class MetodopagoService {
-  private basePath = environment.baseUrlBackend + '/metodopago/api';
+  private basePath = environment.baseUrlBackend + '/metodopago';
   private pagoPath = environment.baseUrlBackend + '/metodopago/api/v1/pagos';
 
   constructor(private http: HttpClient) { }
 
   // Métodos originales para CRUD de métodos de pago
   save = (dato: any): Observable<any> => {
-    const path = this.basePath + `/metodopago/save`;
+    const path = this.basePath + `/api/metodopago/save`;
     return this.http.post<any>(path, dato).pipe(map((res) => res));
   }
 
   update = (dato: any, id: any): Observable<any> => {
-    const path = this.basePath + `/metodopago/update/${id}`;
+    const path = this.basePath + `/api/metodopago/update/${id}`;
     return this.http.post<any>(path, dato).pipe(map((res) => res));
   }
 
   delete = (id: any): Observable<any> => {
-    const path = this.basePath + `/metodopago/delete/${id}`;
+    const path = this.basePath + `/api/metodopago/delete/${id}`;
     return this.http.post<any>(path, null).pipe(map((res) => res));
   }
 
   find = (id: any): Observable<any> => {
-    const path = this.basePath + `/metodopago/find/${id}`;
+    const path = this.basePath + `/api/metodopago/find/${id}`;
     return this.http.post<any>(path, null).pipe(map((res) => res));
   }
 
   list = (): Observable<any> => {
-    const path = this.basePath + `/metodopago/list`;
+    const path = this.basePath + `/api/metodopago/list`;
     return this.http.post<any>(path, null).pipe(map((res) => res));
   }
 
