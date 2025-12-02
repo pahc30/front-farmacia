@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
+
 import { Observable, Subject, interval } from 'rxjs';
 import { takeWhile } from 'rxjs/operators';
 
@@ -8,7 +10,7 @@ import { takeWhile } from 'rxjs/operators';
 })
 export class QrScanService {
   
-  private readonly API_BASE = 'http://localhost:7014/metodopago/api/v1';
+  private readonly API_BASE = environment.baseUrlBackend + '/metodopago/api/v1';
   private pollingInterval: any;
   private qrScannedSubject = new Subject<any>();
 
